@@ -93,7 +93,7 @@ Each rule comes from a field already in the Northwind data. The server enforces 
 
 ### Sources and licenses
 
-Northwind Traders, in the expanded build at [jpwhite3/northwind-SQLite3](https://github.com/jpwhite3/northwind-SQLite3) (MIT, copyright JP White), which extends Microsoft's Northwind sample in [microsoft/sql-server-samples](https://github.com/microsoft/sql-server-samples) (MIT, copyright Microsoft Corporation). The repository ships the seed data with both copyright notices in `data/seed/`.
+Northwind Traders, in the expanded build at [jpwhite3/northwind-SQLite3](https://github.com/jpwhite3/northwind-SQLite3) (MIT, copyright JP White), which extends Microsoft's Northwind sample in [microsoft/sql-server-samples](https://github.com/microsoft/sql-server-samples) (MIT, copyright Microsoft Corporation). The repository ships this data with both copyright notices in `THIRD-PARTY-NOTICES.md`.
 
 ### The live API
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-oim-shop is an open-source reference product for OIM3690: Northwind Traders' internal sales system, built in JavaScript and TypeScript as three tagged versions (`v1`, `v2`, `v3`) on one history. Requirements are in `docs/prd.md`; read it before changing scope, and ask Zhi rather than editing a requirement or resolving a **Pending** item yourself.
+oim-shop is an open-source reference product for OIM3690: Northwind Traders' internal sales system, built in JavaScript and TypeScript as three tagged versions (`v1`, `v2`, `v3`) on one history. Requirements are in `docs/prd.md`; read it before changing scope, and ask Zhi before editing a requirement or resolving a **Pending** item.
 
 This version is independent of the Python oim-shop for OIM7510/6301. Share no code, interface conventions or sync scripts with it, and do not review or change it.
 
@@ -34,7 +34,7 @@ Before each tag, Zhi reviews screenshots of every page in light and dark mode.
 - Dates are shifted forward 1,341 days; only orders placed by now are listed; `per_page` is capped at 100. The order list has no lines, so `v3` loads from `data/seed/` and syncs incrementally.
 - Sync by `order_date`, never by `order_id` (IDs are out of date order), re-reading 40 days to pick up shipped dates.
 - `name` (part of the name, any case) on products and customers, `employee_id` on orders, and `clock_shift_days` on `/shop` are live since 2026-10-22. `/shop` allows 300 requests a minute per IP, shared with most of oim-api.
-- 1,337 orders predate their employee's hire date. This is in the source data and is not a bug.
+- The source has 1,337 orders that predate their employee's hire date. This is in the source data and is not a bug.
 
 ## Frontend Stack
 
@@ -62,4 +62,7 @@ Copied from `~/.claude/templates/frontend-stack.md`, last verified 2026-10-20.
 
 ## Commands
 
-None yet: no code exists. Add the build, lint, test and single-test commands here when `web/` and `api/` are scaffolded.
+- `npm test` runs the Playwright tests (desktop and phone projects). First run: `npm install` and `npx playwright install chromium`.
+- One test: `npx playwright test -g "<part of its name>"`; one project: `--project=chromium`.
+- Tests open `v1/index.html` from disk and never reach the network: `e2e/fake-api.js` answers `oim.zhili.dev/shop` from `e2e/fixtures/` (recorded from the live API) and filters and pages them the way oim-api does, and blocks Google Fonts.
+- Add the build and lint commands here when `web/` arrives in `v2`.

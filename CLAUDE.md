@@ -33,7 +33,7 @@ Before each tag, Zhi reviews screenshots of every page in light and dark mode.
 
 - Dates are shifted forward 1,341 days; only orders placed by now are listed; `per_page` is capped at 100. The order list has no lines, so `v3` loads from `data/seed/` and syncs incrementally.
 - Sync by `order_date`, never by `order_id` (IDs are out of date order), re-reading 40 days to pick up shipped dates.
-- `name` on products and customers, `employee_id` on orders and `clock_shift_days` on `/shop` are being added. Check the `/shop` index before relying on them.
+- `name` (part of the name, any case) on products and customers, `employee_id` on orders, and `clock_shift_days` on `/shop` are live since 2026-10-22. `/shop` allows 300 requests a minute per IP, shared with most of oim-api.
 - 1,337 orders predate their employee's hire date. This is in the source data and is not a bug.
 
 ## Frontend Stack

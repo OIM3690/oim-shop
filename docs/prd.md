@@ -105,7 +105,7 @@ The order list carries totals and `employee_id` but no lines. Reading every orde
 
 - The seed keeps the source dates unchanged. Loading it applies the shift from `/shop` (`clock_shift_days`) and keeps only the orders placed by the time of loading.
 - Sync reads orders by date, because order IDs in this data do not follow date order. Each run reads the order list from 40 days before the newest stored order, fetches the lines of any order it does not have yet, and updates the shipped date of orders it already has. An order ships at most 37 days after it is placed, so the window catches every shipment. Orders are matched by order ID, so a repeated run changes nothing.
-- About four new orders arrive per day, so an hourly sync is enough. Sync stays within `oim-api`'s rate limit.
+- About four new orders arrive per day, so an hourly sync is enough. A run makes a few requests, far below `oim-api`'s limit of 300 requests a minute.
 - Orders entered in `v3` use IDs from 1,000,000 upward, far above the Northwind range (10248 to 26529), so a synced order can never collide with an entered one.
 
 ### Known quirks in the data
@@ -203,9 +203,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 
 ## Open items
 
-- `oim-api` does not yet support `name` on `/shop/products` and `/shop/customers`, `employee_id` on `/shop/orders`, or `clock_shift_days` on `/shop`. Search in `v1`, the `v2` employee pages and the `v3` seed load wait for them.
 - Choice of server, framework and database for `v3`.
 - How the `v2` single-page app handles deep links on GitHub Pages.
-- `oim-api`'s rate limit for `/shop`, which sets the pace of sync.
 - GitHub OAuth callback URLs for local development and production.
 - Whether Playwright runs on the development machine.

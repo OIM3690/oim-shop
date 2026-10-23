@@ -49,6 +49,19 @@ describe("sign-in", () => {
     expect(me).toEqual({ signed_in: true, employee: null });
   });
 
+  it("says sign-in is not set up when the server has no OAuth App", async () => {
+    const db = freshDb();
+    const app = createApp({
+      db,
+      now: () => TEST_NOW,
+      publicUrl: ORIGIN,
+      github: { clientId: "", clientSecret: "" },
+    });
+    const response = await app.request("/api/auth/github");
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ detail: "Sign-in is not set up on this server." });
+  });
+
   it("refuses a callback whose state does not match", async () => {
     const { app } = make();
     const response = await app.request("/api/auth/github/callback?code=alice&state=forged", {

@@ -13,8 +13,12 @@ const githubUser = z.object({ id: z.number().int().positive() });
 
 export const auth = new Hono<AppEnv>()
   .get("/github", (c) => {
+    const { publicUrl, github } = c.var.settings;
+    // Without an OAuth App, GitHub would only show its own error page.
+    if (!github.clientId || !github.clientSecret) {
+      return c.json({ detail: "Sign-in is not set up on this server." }, 503);
+    }
     const state = generateState();
-    const { publicUrl } = c.var.settings;
     setCookie(c, STATE_COOKIE, state, {
       httpOnly: true,
       secure: publicUrl.startsWith("https://"),

@@ -62,8 +62,9 @@ describe("customers", () => {
     await user.click(within(val2).getByRole("link", { name: "IT" }));
 
     expect(await screen.findByRole("heading", { name: "IT" })).toBeInTheDocument();
-    expect(screen.getByText("Val2", { selector: "dd" })).toBeInTheDocument();
-    expect(location().pathname).toMatch(/\/customers\/Val2%20$/);
+    // The customer ID and the contact name are both "Val2".
+    expect(screen.getAllByText("Val2", { selector: "dd" })).toHaveLength(2);
+    expect(location().pathname).toMatch(/\/customers\/Val2 $/);
   });
 
   it("says so when a customer does not exist", async () => {

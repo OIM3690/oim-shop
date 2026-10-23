@@ -64,9 +64,11 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Darker than shadcn's 0.577, so red text on its own 10% tint reaches 4.5:1. */
+  --destructive: oklch(0.53 0.22 27.325);
   --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  /* Field outlines are the only sign of an empty field, so they reach 3:1 (WCAG 1.4.11). */
+  --input: oklch(0.65 0 0);
   --ring: oklch(0.6 0.08 238);
   --chart-1: #2b6cb0;
   --chart-2: oklch(0.556 0 0);
@@ -102,7 +104,7 @@
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
+    --input: oklch(1 0 0 / 40%);
     --ring: oklch(0.6 0.065 238);
     --chart-1: #4f95d6;
     --chart-2: oklch(0.556 0 0);

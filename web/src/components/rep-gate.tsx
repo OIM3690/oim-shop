@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { GitHubMark } from "@/components/github-mark";
-import { EmptyState } from "@/components/query-states";
+import { EmptyState, ErrorState } from "@/components/query-states";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SIGN_IN_URL, type Employee } from "@/lib/api";
@@ -12,6 +12,9 @@ import { meQuery } from "@/lib/queries";
 export function RepGate({ children }: { children: (rep: Employee) => ReactNode }) {
   const me = useQuery(meQuery());
   if (me.isPending) return <Skeleton className="h-64 w-full" />;
+  if (me.isError) {
+    return <ErrorState error={me.error} what="Your account" onRetry={() => void me.refetch()} />;
+  }
   if (!me.data?.signed_in) {
     return (
       <EmptyState

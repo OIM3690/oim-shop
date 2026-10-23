@@ -22,6 +22,16 @@ export function Account() {
   });
 
   if (me.isPending) return null;
+  if (me.isError) {
+    return (
+      <div className="space-y-2 p-2">
+        <p className="text-muted-foreground text-xs">Could not check whether you are signed in.</p>
+        <Button variant="outline" className="w-full" onClick={() => void me.refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
   if (!me.data?.signed_in) {
     return (
       <div className="space-y-2 p-2">

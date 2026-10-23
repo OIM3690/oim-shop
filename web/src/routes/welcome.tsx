@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/query-states";
+import { EmptyState, ErrorState } from "@/components/query-states";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -22,6 +22,9 @@ const schema = z.object({ display_name: displayName });
 function WelcomePage() {
   const me = useQuery(meQuery());
   if (me.isPending) return <Skeleton className="h-48 w-full" />;
+  if (me.isError) {
+    return <ErrorState error={me.error} what="Your account" onRetry={() => void me.refetch()} />;
+  }
   if (!me.data?.signed_in) {
     return (
       <EmptyState

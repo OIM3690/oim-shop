@@ -18,6 +18,23 @@ describe("signing in", () => {
     );
   });
 
+  it("says the account did not load, rather than asking a rep to sign in again", async () => {
+    signInAs(3009, "Ana");
+    server.use(http.get("http://localhost:3000/api/me", () => new Response(null, { status: 500 })));
+    renderApp("/orders/new");
+    expect(await screen.findByText("Your account did not load.")).toBeInTheDocument();
+    expect(screen.queryByText("Sign in to enter orders.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign in with GitHub" })).not.toBeInTheDocument();
+  });
+
+  it("says the account did not load on the welcome page too", async () => {
+    signInAs(3010);
+    server.use(http.get("http://localhost:3000/api/me", () => new Response(null, { status: 500 })));
+    renderApp("/welcome");
+    expect(await screen.findByText("Your account did not load.")).toBeInTheDocument();
+    expect(screen.queryByText("You are not signed in.")).not.toBeInTheDocument();
+  });
+
   it("asks a new rep to choose a name, then makes them a rep", async () => {
     signInAs(3001);
     const { user, location } = renderApp("/welcome");

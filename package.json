@@ -6,17 +6,21 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "npm run dev --workspace web",
+    "dev": "node scripts/dev.ts",
     "test": "playwright test",
-    "test:unit": "npm run test --workspace web",
-    "lint": "npm run lint --workspace web",
-    "typecheck": "npm run typecheck --workspace web",
-    "build": "npm run build --workspace web"
+    "test:unit": "npm run test --workspace web && npm run test --workspace api",
+    "lint": "npm run lint --workspace web && npm run lint --workspace api",
+    "typecheck": "npm run typecheck --workspace web && npm run typecheck --workspace api",
+    "build": "npm run build --workspace web",
+    "seed": "npm run seed --workspace api",
+    "sync": "npm run sync --workspace api",
+    "reset": "npm run reset --workspace api"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1"
   },
   "workspaces": [
-    "web"
+    "web",
+    "api"
   ]
 }

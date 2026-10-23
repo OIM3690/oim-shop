@@ -4,8 +4,9 @@ import { config } from "./config.ts";
 import { openDatabase } from "./db.ts";
 import { startServer } from "./serve.ts";
 
-startServer({
-  db: openDatabase(config.databasePath),
+const db = openDatabase(config.databasePath);
+const server = startServer({
+  db,
   now: () => bostonNow(),
   publicUrl: config.publicUrl,
   github: config.github,
@@ -14,3 +15,15 @@ startServer({
   host: config.host,
   webDist: config.webDist || undefined,
 });
+
+// In the container this is process 1, which ignores a signal it does not
+// handle, so `podman stop` would wait and then kill it. Finish the requests in
+// flight, close the database, and exit.
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.once(signal, () => {
+    server.close(() => {
+      db.close();
+      process.exit(0);
+    });
+  });
+}

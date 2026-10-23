@@ -24,5 +24,7 @@ export default defineConfig({
     url: `${V3_URL}api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    // Without this Playwright kills the server outright, and it cannot remove its database.
+    gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
   },
 });

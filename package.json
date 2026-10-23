@@ -6,6 +6,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "npm run dev --workspace web",
     "test": "playwright test",
     "test:unit": "npm run test --workspace web",
     "lint": "npm run lint --workspace web",

@@ -1,6 +1,6 @@
 # Third-party notices
 
-The Northwind data in this repository (the test fixtures in `e2e/fixtures/`, and from `v3` the seed in `data/seed/`) comes from two projects, both under the MIT License. Their notices follow unchanged.
+The Northwind data in this repository (the test data in `e2e/fixtures/` and `web/src/mocks/data/`, and from `v3` the seed in `data/seed/`) comes from two projects, both under the MIT License. Their notices follow unchanged.
 
 ## jpwhite3/northwind-SQLite3
 

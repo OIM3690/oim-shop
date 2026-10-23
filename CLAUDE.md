@@ -62,7 +62,20 @@ Copied from `~/.claude/templates/frontend-stack.md`, last verified 2026-10-20.
 
 ## Commands
 
-- `npm test` runs the Playwright tests (desktop and phone projects). First run: `npm install` and `npx playwright install chromium`.
-- One test: `npx playwright test -g "<part of its name>"`; one project: `--project=chromium`.
-- Tests open `v1/index.html` from disk and never reach the network: `e2e/fake-api.js` answers `oim.zhili.dev/shop` from `e2e/fixtures/` (recorded from the live API) and filters and pages them the way oim-api does, and blocks Google Fonts.
-- Add the build and lint commands here when `web/` arrives in `v2`.
+Run from the repository root; `web/` is an npm workspace. The machine is small, so run builds and test suites one at a time.
+
+- `npm install`, then `npx playwright install chromium` once.
+- `npm run dev`: the v2 app against the live oim-api, at `http://localhost:5173/oim-shop/`.
+- `npm run lint` (oxlint and Prettier), `npm run typecheck` (`tsc -b`), `npm run test:unit` (Vitest), `npm run build`.
+- `npm test`: Playwright. `v1-*` projects open `v1/index.html` from disk; `v2-*` projects run `npm run e2e:serve -w web`, a build made with `--mode e2e` (`web/.env.e2e` sets `VITE_API_MOCK=true`) served by `vite preview` on port 4173.
+- One test: `npx vitest run -t "<part of its name>"` inside `web/`, or `npx playwright test -g "<part of its name>" --project=v2-desktop`.
+
+## How v2 is put together
+
+- `web/src/lib/api.ts` is the only place that calls oim-api. Every response is parsed by a zod schema and the types are inferred from it; a field the API sends as null must be `.nullable()` there.
+- `web/src/lib/queries.ts` holds one react-query option set per kind of data. Pages call `useQuery(...)` and render loading, empty and error with `components/query-states.tsx`.
+- Routes are files under `web/src/routes/` (TanStack Router plugin; `routeTree.gen.ts` is generated and committed). Filters and the page number live in search params validated by zod with `.catch()`, so a bad address falls back instead of crashing. Changing a filter resets `page`.
+- Tables use TanStack Table v9 through `components/data-table/`, with no row features registered: the API does paging, filtering and ordering.
+- `web/src/mocks/handlers.ts` imitates oim-api over data recorded in `web/src/mocks/data/`. Vitest uses it through `msw/node` (`src/test/setup.ts` fails on any unhandled request); the e2e build uses it through the service worker in `web/public/mockServiceWorker.js`. Page tests render the whole app at a URL with `src/test/render.tsx`.
+- Dark mode follows the operating system (`@custom-variant dark` is a media query in `index.css`); there is no `.dark` class.
+- `vite.config.ts` sets `base` to `/oim-shop/` (override with `VITE_BASE`) and copies `index.html` to `404.html` after a build for GitHub Pages.

@@ -18,6 +18,11 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - name: Build, and check the GitHub Pages fallback
+        run: npm run build && cmp web/dist/index.html web/dist/404.html
       - run: npx playwright install --with-deps chromium
       - run: npm test
       - uses: actions/upload-artifact@v7

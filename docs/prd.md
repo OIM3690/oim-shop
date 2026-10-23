@@ -113,7 +113,7 @@ The order list carries totals and `employee_id` but no lines. Reading every orde
 These come from the source data. The app shows them as they are and explains them on the page where they appear.
 
 - The source has 1,337 orders dated before the hire date of the employee who took them.
-- One customer company is named `IT` (customer `VALON`).
+- Two customer companies are named `IT` and have no city or country. One of them has the ID `Val2 `, with a space at the end, and `oim-api` cannot look it up by that ID.
 - Some orders have many lines: up to 77, one for every product.
 - The source has 21 orders that never shipped, so their shipped date stays empty.
 
@@ -184,7 +184,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 ## Engineering practice
 
 - Vitest for the interface and, from `v3`, the server; `v2` tests replay recorded `oim-api` responses, and server tests run against a real SQLite file. A few Playwright tests cover the main flows: look up a product, and from `v3` read the dashboard and enter and cancel an order.
-- TypeScript in strict mode, ESLint and Prettier, GitHub Actions CI on every push and pull request, and Dependabot.
+- TypeScript in strict mode, oxlint and Prettier, GitHub Actions CI on every push and pull request, and Dependabot.
 - Tests come first, and each commit holds one change with a message you can learn from. Every tag is a state where all tests pass and the app runs.
 - The repository carries `README.md`, `AGENTS.md`, an MIT `LICENSE`, `SECURITY.md` and `.env.example`.
 
@@ -198,12 +198,11 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 ## Deployment
 
 - **Pending**: the live address. Proposed: `https://oim-shop-js.zhili.dev`.
-- `v2` deploys to GitHub Pages from GitHub Actions after CI passes on `main`.
+- `v2` deploys to GitHub Pages from GitHub Actions after CI passes on `main`. Each build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app on GitHub Pages.
 - From `v3`, GitHub Actions builds the container image and the server pulls it; nothing is built on the server. Migrations run before the new version starts. The live address moves from GitHub Pages to the server.
 
 ## Open items
 
 - Choice of server, framework and database for `v3`.
-- How the `v2` single-page app handles deep links on GitHub Pages.
 - GitHub OAuth callback URLs for local development and production.
 - Whether Playwright runs on the development machine.

@@ -1,15 +1,15 @@
 import { copyFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { inject } from "vitest";
 import { openDatabase, type Database } from "../src/db.ts";
 
 export { TEST_NOW, TEST_SHIFT_DAYS } from "./global-setup.ts";
 
-/** A private copy of the seeded template database. */
+/** A private copy of the seeded template database, removed with the template when the run ends. */
 export function freshDb(): Database {
-  const path = join(mkdtempSync(join(tmpdir(), "oim-shop-")), "shop.db");
-  copyFileSync(inject("templateDb"), path);
+  const template = inject("templateDb");
+  const path = join(mkdtempSync(join(dirname(template), "copy-")), "shop.db");
+  copyFileSync(template, path);
   return openDatabase(path);
 }
 

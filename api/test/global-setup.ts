@@ -1,6 +1,7 @@
 // Seeds one template database for the whole test run. Each test copies it,
-// so the 600,000 order lines load once rather than once per test.
-import { mkdtempSync } from "node:fs";
+// so the 600,000 order lines load once rather than once per test. The copies
+// go in the template's folder, which is removed when the run ends.
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { TestProject } from "vitest/node";
@@ -12,12 +13,14 @@ export const TEST_NOW = "2026-10-22T16:00:00";
 export const TEST_SHIFT_DAYS = 1341;
 
 export default function setup(project: TestProject) {
-  const path = join(mkdtempSync(join(tmpdir(), "oim-shop-test-")), "template.db");
+  const dir = mkdtempSync(join(tmpdir(), "oim-shop-test-"));
+  const path = join(dir, "template.db");
   const db = openDatabase(path);
   loadSeed(db, { shiftDays: TEST_SHIFT_DAYS, now: TEST_NOW });
   db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
   db.close();
   project.provide("templateDb", path);
+  return () => rmSync(dir, { recursive: true, force: true });
 }
 
 declare module "vitest" {

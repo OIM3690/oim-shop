@@ -5,7 +5,7 @@ import { DateField, FilterBar, SelectField } from "@/components/filters";
 import { OrderList } from "@/components/order-list";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { allCustomersQuery, employeesQuery, optionsFailed } from "@/lib/queries";
+import { allCustomersQuery, directoryQuery, optionsFailed } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 import { sortParam } from "@/lib/sorting";
 import { useCountries } from "@/lib/use-countries";
@@ -33,7 +33,7 @@ function OrdersPage() {
   const { customer, employee, country, from, to, sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
   const customers = useQuery(allCustomersQuery());
-  const employees = useQuery(employeesQuery());
+  const employees = useQuery(directoryQuery());
   const countries = useCountries();
 
   const filter = (next: Partial<OrderSearch>) =>
@@ -62,7 +62,7 @@ function OrdersPage() {
           value={employee ? String(employee) : undefined}
           options={(employees.data ?? []).map((e) => ({
             value: String(e.employee_id),
-            label: `${e.first_name} ${e.last_name}`,
+            label: e.name,
           }))}
           failed={optionsFailed(employees, "Employees")}
           onChange={(value) => filter({ employee: value ? Number(value) : undefined })}

@@ -9,6 +9,7 @@ export type {
   Category,
   Customer,
   Dashboard,
+  Directory,
   Employee,
   Me,
   Order,
@@ -80,6 +81,9 @@ export interface CustomerQuery extends SortQuery {
   country?: string;
   page: number;
 }
+export interface EmployeeQuery extends SortQuery {
+  page: number;
+}
 export interface OrderQuery extends SortQuery {
   customer_id?: string;
   employee_id?: number;
@@ -131,7 +135,13 @@ export const api = {
   customer: (id: string, signal?: AbortSignal) =>
     request(`/customers/${encodeURIComponent(id)}`, schemas.customer, { signal }),
 
-  employees: (signal?: AbortSignal) => request("/employees", z.array(schemas.employee), { signal }),
+  employees: (query: EmployeeQuery, signal?: AbortSignal) =>
+    request("/employees", schemas.pageOf(schemas.employee), {
+      params: { ...query, per_page: PER_PAGE },
+      signal,
+    }),
+  /** Everyone's name and manager, for the reporting lines and the employee menus. */
+  directory: (signal?: AbortSignal) => request("/employees/directory", schemas.directory, { signal }),
   employee: (id: number, signal?: AbortSignal) => request(`/employees/${id}`, schemas.employee, { signal }),
 
   orders: (query: OrderQuery, signal?: AbortSignal) =>

@@ -1,7 +1,8 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import { http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signInAs, value } from "./api-server";
-import { recordRequests } from "./helpers";
+import { server, signInAs, testDb, value } from "./api-server";
+import { recordRequests, rows } from "./helpers";
 import { renderApp } from "./render";
 
 describe("employees", () => {
@@ -48,5 +49,48 @@ describe("employees", () => {
   it("says so when an employee does not exist", async () => {
     renderApp("/employees/99");
     expect(await screen.findByText("There is no employee 99.")).toBeInTheDocument();
+  });
+
+  it("pages the list on the server as reps join", async () => {
+    const insert = testDb().prepare(
+      "INSERT INTO employees (employee_id, first_name, last_name, title, reports_to, hire_date) VALUES (?, ?, '', 'Sales Representative', 5, '2026-10-01')",
+    );
+    for (let i = 0; i < 30; i++) insert.run(100 + i, `Rep ${i}`);
+    const requests = recordRequests("/employees");
+    const { user } = renderApp("/employees");
+    expect(await screen.findByText("1–25 of 39")).toBeInTheDocument();
+    expect(rows()).toHaveLength(25);
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByText("26–39 of 39")).toBeInTheDocument();
+    expect(requests.at(-1)!.searchParams.get("page")).toBe("2");
+  });
+
+  it("sorts by revenue on the server, largest first", async () => {
+    const { user, location } = renderApp("/employees");
+    await screen.findByText("1–9 of 9");
+    await user.click(screen.getByRole("button", { name: "Sort by revenue" }));
+    expect(location().search).toEqual({ sort: "-revenue" });
+    const best = value(
+      "SELECT trim(e.first_name || ' ' || e.last_name) FROM orders o JOIN employees e USING (employee_id) GROUP BY employee_id ORDER BY sum(o.lines_total) DESC LIMIT 1",
+    );
+    await waitFor(() => expect(rows()[0]).toHaveTextContent(String(best)));
+  });
+
+  it("shows an employee's manager and direct reports", async () => {
+    renderApp("/employees/5");
+    await screen.findByRole("heading", { name: "Steven Buchanan" });
+    expect(screen.getByRole("link", { name: "Andrew Fuller" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Michael Suyama" })).toBeInTheDocument();
+  });
+
+  it("says the direct reports did not load, rather than None", async () => {
+    server.use(
+      http.get("http://localhost:3000/api/employees/directory", () => new Response(null, { status: 500 })),
+    );
+    renderApp("/employees/5");
+    await screen.findByRole("heading", { name: "Steven Buchanan" });
+    expect(await screen.findByText("Did not load.")).toBeInTheDocument();
+    expect(screen.queryByText("None")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again: Direct reports" })).toBeInTheDocument();
   });
 });

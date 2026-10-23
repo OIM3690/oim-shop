@@ -147,10 +147,10 @@ describe("orders", () => {
 });
 
 describe("employees", () => {
-  it("lists all nine with orders and revenue", async () => {
+  it("lists a page of employees with orders, revenue and the manager's name", async () => {
     const { body } = await get("/api/employees");
-    expect(body).toHaveLength(9);
-    const steven = body.find((e: { employee_id: number }) => e.employee_id === 5);
+    expect(body.pagination).toMatchObject({ page: 1, total: 9, pages: 1 });
+    const steven = body.items.find((e: { employee_id: number }) => e.employee_id === 5);
     expect(steven.order_count).toBe(one(db, "SELECT count(*) AS n FROM orders WHERE employee_id = 5").n);
     expect(steven.revenue_dollars).toBe(
       one(
@@ -158,8 +158,39 @@ describe("employees", () => {
         `SELECT round(sum(${LINE}), 2) AS r FROM order_lines l JOIN orders USING (order_id) WHERE employee_id = 5`,
       ).r,
     );
-    expect((await get("/api/employees/5")).body).toMatchObject({ first_name: "Steven", reports_to: 2 });
+    expect(steven.manager_name).toBe("Andrew Fuller");
+    expect((await get("/api/employees/5")).body).toMatchObject({
+      first_name: "Steven",
+      reports_to: 2,
+      manager_name: "Andrew Fuller",
+    });
+    expect((await get("/api/employees/2")).body.manager_name).toBeNull();
     expect((await get("/api/employees/99")).status).toBe(404);
+  });
+
+  it("pages and sorts on the server", async () => {
+    const page = (await get("/api/employees?per_page=4&page=3")).body;
+    expect(page.items).toHaveLength(1);
+    expect(page.pagination).toMatchObject({ page: 3, pages: 3, total: 9 });
+    const top = (await get("/api/employees?sort=-revenue&per_page=1")).body.items[0];
+    const best = one(
+      db,
+      "SELECT employee_id FROM orders GROUP BY employee_id ORDER BY sum(lines_total) DESC LIMIT 1",
+    );
+    expect(top.employee_id).toBe(best.employee_id);
+    expect((await get("/api/employees?sort=-hire_date&per_page=1")).body.items[0].first_name).toBe("Anne");
+    expect((await get("/api/employees?sort=password")).status).toBe(400);
+  });
+
+  it("gives everyone's name, title and manager for the reporting lines and menus", async () => {
+    const { body } = await get("/api/employees/directory");
+    expect(body).toHaveLength(9);
+    expect(body[0]).toEqual({
+      employee_id: 1,
+      name: "Nancy Davolio",
+      title: "Sales Representative",
+      reports_to: 2,
+    });
   });
 });
 
@@ -180,7 +211,8 @@ describe("every response matches its schema", () => {
     ["/api/customers/ALFKI", schemas.customer],
     ["/api/orders?per_page=100", schemas.pageOf(schemas.orderSummary)],
     ["/api/orders/10248", schemas.order],
-    ["/api/employees", z.array(schemas.employee)],
+    ["/api/employees", schemas.pageOf(schemas.employee)],
+    ["/api/employees/directory", schemas.directory],
     ["/api/employees/1", schemas.employee],
     ["/api/categories", z.array(schemas.category)],
     ["/api/shippers", z.array(schemas.shipper)],

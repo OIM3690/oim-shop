@@ -51,6 +51,7 @@ export const employee = z.object({
   name: z.string(),
   title: z.string(),
   reports_to: z.number().nullable(),
+  manager_name: z.string().nullable(),
   hire_date: z.string(),
   city: z.string().nullable(),
   country: z.string().nullable(),
@@ -58,6 +59,16 @@ export const employee = z.object({
   order_count: z.number(),
   revenue_dollars: z.number(),
 });
+
+/** Everyone's name and manager, for the reporting lines and the employee menus. */
+export const directory = z.array(
+  z.object({
+    employee_id: z.number(),
+    name: z.string(),
+    title: z.string(),
+    reports_to: z.number().nullable(),
+  }),
+);
 
 export const orderSummary = z.object({
   order_id: z.number(),
@@ -101,6 +112,7 @@ export type Shipper = z.infer<typeof shipper>;
 export type Product = z.infer<typeof product>;
 export type Customer = z.infer<typeof customer>;
 export type Employee = z.infer<typeof employee>;
+export type Directory = z.infer<typeof directory>;
 export type OrderSummary = z.infer<typeof orderSummary>;
 export type OrderLine = z.infer<typeof orderLine>;
 export type Order = z.infer<typeof order>;

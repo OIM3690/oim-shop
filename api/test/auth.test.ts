@@ -1,6 +1,5 @@
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { z } from "zod";
 import { createApp } from "../src/app.ts";
 import * as schemas from "../src/schemas.ts";
 import { as, fakeGitHub, ORIGIN, signIn } from "./auth-helpers.ts";
@@ -94,7 +93,7 @@ describe("sign-in", () => {
     });
     expect(me.employee!.employee_id).toBeGreaterThan(9);
 
-    const listed = z.array(schemas.employee).parse(await (await app.request("/api/employees")).json());
+    const listed = schemas.directory.parse(await (await app.request("/api/employees/directory")).json());
     expect(listed.map((e) => e.name)).toContain("Ana Ruiz");
   });
 

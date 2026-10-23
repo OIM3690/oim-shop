@@ -4,13 +4,13 @@ import { z } from "zod";
 import { BackLink, DetailCard, DetailLoading } from "@/components/detail";
 import { OrderList } from "@/components/order-list";
 import { PageHeader } from "@/components/page-header";
-import { ErrorState } from "@/components/query-states";
+import { ErrorState, LoadFailed } from "@/components/query-states";
 import { Button } from "@/components/ui/button";
 import { api, type Employee } from "@/lib/api";
 import { dayBefore } from "@/lib/dates";
 import { fullName } from "@/lib/employees";
 import { formatCount, formatDate, formatMoney } from "@/lib/format";
-import { employeeQuery, employeesQuery } from "@/lib/queries";
+import { directoryQuery, employeeQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 import { sortParam } from "@/lib/sorting";
 
@@ -22,14 +22,10 @@ export const Route = createFileRoute("/employees/$employeeId")({
   component: EmployeePage,
 });
 
-function PersonLink({ employee }: { employee: Employee }) {
+function PersonLink({ id, name }: { id: number; name: string }) {
   return (
-    <Link
-      to="/employees/$employeeId"
-      params={{ employeeId: String(employee.employee_id) }}
-      className="hover:underline"
-    >
-      {fullName(employee)}
+    <Link to="/employees/$employeeId" params={{ employeeId: String(id) }} className="hover:underline">
+      {name}
     </Link>
   );
 }
@@ -59,7 +55,7 @@ function EmployeePage() {
   const { sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
   const employee = useQuery(employeeQuery(Number(employeeId)));
-  const everyone = useQuery(employeesQuery());
+  const directory = useQuery(directoryQuery());
   const beforeHire = useOrdersBeforeHire(employee.data);
 
   if (employee.isPending) return <DetailLoading label="Loading employee" />;
@@ -84,9 +80,7 @@ function EmployeePage() {
   }
 
   const e = employee.data;
-  const all = everyone.data ?? [];
-  const manager = all.find((m) => m.employee_id === e.reports_to);
-  const reports = all.filter((r) => r.reports_to === e.employee_id);
+  const reports = (directory.data ?? []).filter((r) => r.reports_to === e.employee_id);
 
   return (
     <>
@@ -94,19 +88,30 @@ function EmployeePage() {
       <PageHeader title={fullName(e)} description={e.title} />
       <DetailCard
         items={[
-          { label: "Reports to", value: manager ? <PersonLink employee={manager} /> : "No one" },
+          {
+            label: "Reports to",
+            value:
+              e.reports_to && e.manager_name ? (
+                <PersonLink id={e.reports_to} name={e.manager_name} />
+              ) : (
+                "No one"
+              ),
+          },
           {
             label: "Direct reports",
-            value:
-              reports.length > 0 ? (
-                <span className="flex flex-wrap gap-x-3">
-                  {reports.map((r) => (
-                    <PersonLink key={r.employee_id} employee={r} />
-                  ))}
-                </span>
-              ) : (
-                "None"
-              ),
+            value: directory.isPending ? (
+              <span className="text-muted-foreground">Loading…</span>
+            ) : directory.isError ? (
+              <LoadFailed what="Direct reports" onRetry={() => void directory.refetch()} />
+            ) : reports.length > 0 ? (
+              <span className="flex flex-wrap gap-x-3">
+                {reports.map((r) => (
+                  <PersonLink key={r.employee_id} id={r.employee_id} name={r.name} />
+                ))}
+              </span>
+            ) : (
+              "None"
+            ),
           },
           { label: "Hired", value: formatDate(e.hire_date) },
           { label: "Location", value: [e.city, e.country].filter(Boolean).join(", ") || "Not recorded" },

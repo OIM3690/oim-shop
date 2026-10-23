@@ -3,7 +3,14 @@
 // pages that need the same data share one request. After a write, the keys
 // in WRITE_AFFECTS are refetched, so every page shows the change at once.
 import { keepPreviousData, queryOptions, type QueryClient } from "@tanstack/react-query";
-import { api, type CustomerQuery, type OrderQuery, type ProductQuery, type SortQuery } from "./api";
+import {
+  api,
+  type CustomerQuery,
+  type EmployeeQuery,
+  type OrderQuery,
+  type ProductQuery,
+  type SortQuery,
+} from "./api";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -27,8 +34,16 @@ export const allCustomersQuery = () =>
 export const allProductsQuery = () =>
   queryOptions({ queryKey: ["products", "all"], queryFn: ({ signal }) => api.allProducts(signal) });
 
-export const employeesQuery = () =>
-  queryOptions({ queryKey: ["employees"], queryFn: ({ signal }) => api.employees(signal) });
+export const employeesQuery = (query: EmployeeQuery) =>
+  queryOptions({
+    queryKey: ["employees", query],
+    queryFn: ({ signal }) => api.employees(query, signal),
+    placeholderData: keepPreviousData,
+  });
+
+/** Under "employees", so a new rep or a new name refreshes it with the list. */
+export const directoryQuery = () =>
+  queryOptions({ queryKey: ["employees", "directory"], queryFn: ({ signal }) => api.directory(signal) });
 
 export const productsQuery = (query: ProductQuery) =>
   queryOptions({

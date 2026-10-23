@@ -50,6 +50,24 @@ export function EmptyState({ title, description, action, titleLevel }: EmptyStat
   );
 }
 
+/** A small part of a page that did not load, such as one field, with a way to ask again. */
+export function LoadFailed({ what, onRetry }: { what: string; onRetry: () => void }) {
+  return (
+    <span className="inline-flex items-baseline gap-2">
+      <span className="text-muted-foreground">Did not load.</span>
+      <Button
+        variant="link"
+        size="xs"
+        className="h-auto p-0"
+        aria-label={`Try again: ${what}`}
+        onClick={onRetry}
+      >
+        Try again
+      </Button>
+    </span>
+  );
+}
+
 interface ErrorStateProps {
   error: unknown;
   /** What failed to load, as in "The order list did not load." */

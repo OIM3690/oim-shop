@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BackLink, DetailCard, DetailLoading } from "@/components/detail";
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/query-states";
-import { Badge } from "@/components/ui/badge";
+import { StockBadge } from "@/components/status-badges";
 import { Button } from "@/components/ui/button";
 import { formatCount, formatMoney } from "@/lib/format";
 import { categoriesQuery, productQuery } from "@/lib/queries";
@@ -62,20 +62,12 @@ function ProductPage() {
           { label: "Supplier", value: p.supplier },
           { label: "Quantity per unit", value: p.quantity_per_unit },
           { label: "Unit price", value: formatMoney(p.unit_price_dollars) },
-          {
-            label: "Units in stock",
-            value: (
-              <span className="inline-flex items-center gap-2">
-                {formatCount(p.units_in_stock)}
-                {p.low_stock && !p.discontinued ? <Badge variant="outline">Below reorder level</Badge> : null}
-              </span>
-            ),
-          },
+          { label: "Units in stock", value: formatCount(p.units_in_stock) },
           { label: "Reorder level", value: formatCount(p.reorder_level) },
           { label: "Revenue, all time", value: formatMoney(p.revenue_dollars) },
           {
             label: "Status",
-            value: p.discontinued ? <Badge variant="destructive">Discontinued</Badge> : "Available to order",
+            value: <StockBadge product={p} otherwise="Available to order" />,
           },
         ]}
       />

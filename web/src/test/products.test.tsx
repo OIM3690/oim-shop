@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { server, value } from "./api-server";
+import { server, testDb, value } from "./api-server";
 import { recordRequests, rows } from "./helpers";
 import { renderApp } from "./render";
 
@@ -97,5 +97,21 @@ describe("products", () => {
   it("says so when a product does not exist", async () => {
     renderApp("/products/999");
     expect(await screen.findByText("There is no product 999.")).toBeInTheDocument();
+  });
+
+  it("uses the list's words for a product's state on its page", async () => {
+    testDb().exec("UPDATE products SET units_in_stock = 0, discontinued = 0 WHERE product_id = 1");
+    renderApp("/products/1");
+    expect(await screen.findByText("Out of stock")).toBeInTheDocument();
+    expect(screen.queryByText("Available to order")).not.toBeInTheDocument();
+  });
+
+  it("calls low stock the same on a product's page as in the list", async () => {
+    testDb().exec(
+      "UPDATE products SET units_in_stock = 1, reorder_level = 10, discontinued = 0 WHERE product_id = 2",
+    );
+    renderApp("/products/2");
+    expect(await screen.findByText("Low stock")).toBeInTheDocument();
+    expect(screen.queryByText("Below reorder level")).not.toBeInTheDocument();
   });
 });

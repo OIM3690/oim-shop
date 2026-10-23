@@ -1,15 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
 import { z } from "zod";
 import { DataTable } from "@/components/data-table/data-table";
-import type { DataTableFeatures } from "@/components/data-table/features";
+import { sortable, type DataTableFeatures } from "@/components/data-table/features";
 import { FilterBar, SearchField, SelectField } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
-import { SortHeader } from "@/components/sort-header";
 import { Button } from "@/components/ui/button";
 import type { Customer } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
@@ -33,50 +31,38 @@ export const Route = createFileRoute("/customers/")({
 const notRecorded = <span className="text-muted-foreground">Not recorded</span>;
 const column = createColumnHelper<DataTableFeatures, Customer>();
 
-function useColumns(sort: string | undefined, onSort: (sort: string | undefined) => void) {
-  return useMemo(() => {
-    const header =
-      (label: string, field: string, right = false) =>
-      () => (
-        <SortHeader
-          label={label}
-          field={field}
-          sort={sort}
-          onSort={onSort}
-          align={right ? "right" : "left"}
-          firstDirection={right ? "desc" : "asc"}
-        />
-      );
-    return column.columns([
-      column.accessor("company_name", {
-        header: header("Company", "company_name"),
-        cell: ({ row }) => (
-          <Link
-            to="/customers/$customerId"
-            params={{ customerId: row.original.customer_id }}
-            className="text-primary font-medium hover:underline"
-          >
-            {row.original.company_name}
-          </Link>
-        ),
-      }),
-      column.accessor("contact_name", { header: "Contact" }),
-      column.accessor("city", { header: "City", cell: ({ getValue }) => getValue() ?? notRecorded }),
-      column.accessor("country", {
-        header: header("Country", "country"),
-        cell: ({ getValue }) => getValue() ?? notRecorded,
-      }),
-      column.accessor("order_count", {
-        header: header("Orders", "order_count", true),
-        cell: ({ getValue }) => <div className="text-right tabular-nums">{formatCount(getValue())}</div>,
-      }),
-      column.accessor("revenue_dollars", {
-        header: header("Revenue", "revenue", true),
-        cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
-      }),
-    ]);
-  }, [sort, onSort]);
-}
+const columns = column.columns([
+  column.accessor("company_name", {
+    header: "Company",
+    meta: sortable("company_name"),
+    cell: ({ row }) => (
+      <Link
+        to="/customers/$customerId"
+        params={{ customerId: row.original.customer_id }}
+        className="text-primary font-medium hover:underline"
+      >
+        {row.original.company_name}
+      </Link>
+    ),
+  }),
+  column.accessor("contact_name", { header: "Contact" }),
+  column.accessor("city", { header: "City", cell: ({ getValue }) => getValue() ?? notRecorded }),
+  column.accessor("country", {
+    header: "Country",
+    meta: sortable("country"),
+    cell: ({ getValue }) => getValue() ?? notRecorded,
+  }),
+  column.accessor("order_count", {
+    header: "Orders",
+    meta: sortable("order_count", true),
+    cell: ({ getValue }) => <div className="text-right tabular-nums">{formatCount(getValue())}</div>,
+  }),
+  column.accessor("revenue_dollars", {
+    header: "Revenue",
+    meta: sortable("revenue", true),
+    cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
+  }),
+]);
 
 function CustomersPage() {
   const { name, country, sort, page = 1 } = Route.useSearch();
@@ -87,7 +73,6 @@ function CustomersPage() {
   // Any change to the filters or the order starts again at page 1.
   const filter = (next: { name?: string; country?: string; sort?: string }) =>
     navigate({ search: (prev) => cleanSearch({ ...prev, ...next, page: undefined }) });
-  const columns = useColumns(sort, (next) => void filter({ sort: next }));
 
   return (
     <>
@@ -127,7 +112,12 @@ function CustomersPage() {
         />
       ) : (
         <>
-          <DataTable columns={columns} data={customers.data.items} stale={customers.isPlaceholderData} />
+          <DataTable
+            columns={columns}
+            data={customers.data.items}
+            stale={customers.isPlaceholderData}
+            sorting={{ sort, onSort: (next) => void filter({ sort: next }) }}
+          />
           <Pager
             pagination={customers.data.pagination}
             onPage={(next) =>

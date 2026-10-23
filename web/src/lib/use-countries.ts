@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { optionsFailed } from "@/components/filters";
-import { allCustomersQuery } from "./queries";
+import { allCustomersQuery, optionsFailed } from "./queries";
 
 /** The countries customers are in, sorted, for the filter menus. */
 export function useCountries() {

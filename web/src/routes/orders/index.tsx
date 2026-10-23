@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { DateField, FilterBar, optionsFailed, SelectField } from "@/components/filters";
+import { DateField, FilterBar, SelectField } from "@/components/filters";
 import { OrderList } from "@/components/order-list";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { allCustomersQuery, employeesQuery } from "@/lib/queries";
+import { allCustomersQuery, employeesQuery, optionsFailed } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 import { sortParam } from "@/lib/sorting";
 import { useCountries } from "@/lib/use-countries";

@@ -50,10 +50,6 @@ export function SearchField({ id, label, placeholder, value, onSearch }: SearchF
   );
 }
 
-/** The `failed` prop of a SelectField whose options come from `query`. */
-export const optionsFailed = (query: { isError: boolean; refetch: () => unknown }, what: string) =>
-  query.isError ? { what, onRetry: () => void query.refetch() } : undefined;
-
 interface SelectFieldProps {
   id: string;
   label: string;

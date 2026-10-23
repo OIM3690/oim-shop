@@ -96,3 +96,7 @@ const WRITE_AFFECTS = [
 export function refetchAfterWrite(queryClient: QueryClient) {
   return Promise.all(WRITE_AFFECTS.map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
 }
+
+/** The `failed` prop of a SelectField whose options come from `query`. */
+export const optionsFailed = (query: { isError: boolean; refetch: () => unknown }, what: string) =>
+  query.isError ? { what, onRetry: () => void query.refetch() } : undefined;

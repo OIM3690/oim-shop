@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { value } from "./api-server";
 import { recordRequests, rows } from "./helpers";
@@ -35,7 +35,12 @@ describe("customers", () => {
         "SELECT c.company_name FROM orders o JOIN customers c USING (customer_id) GROUP BY o.customer_id ORDER BY count(*) DESC, c.customer_id LIMIT 1",
       ),
     );
-    await screen.findByRole("button", { name: "Sort by orders", pressed: true });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Sort by orders" }).closest("th")).toHaveAttribute(
+        "aria-sort",
+        "descending",
+      ),
+    );
     expect(await screen.findByText(top, { selector: "a" })).toBeInTheDocument();
     expect(rows()[0]).toHaveTextContent(top);
   });

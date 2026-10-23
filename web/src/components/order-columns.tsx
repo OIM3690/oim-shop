@@ -1,7 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
-import type { DataTableFeatures } from "@/components/data-table/features";
-import { SortHeader } from "@/components/sort-header";
+import { sortable, type DataTableFeatures } from "@/components/data-table/features";
 import { ShippedBadge } from "@/components/status-badges";
 import type { OrderSummary } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -23,6 +22,7 @@ const orderColumn = column.accessor("order_id", {
 
 const dateColumn = column.accessor("order_date", {
   header: "Date",
+  meta: { sort: { field: "order_date", firstDirection: "desc" } },
   cell: ({ getValue }) => <span className="whitespace-nowrap">{formatDate(getValue())}</span>,
 });
 
@@ -60,7 +60,8 @@ const shipToColumn = column.display({
 });
 
 const totalColumn = column.accessor("order_total_dollars", {
-  header: () => <div className="text-right">Total</div>,
+  header: "Total",
+  meta: sortable("order_total", true),
   cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
 });
 
@@ -69,37 +70,21 @@ const statusColumn = column.accessor("shipped_date", {
   cell: ({ getValue }) => <ShippedBadge shippedDate={getValue()} />,
 });
 
-export interface OrderSorting {
-  sort: string | undefined;
-  onSort: (sort: string | undefined) => void;
-}
+/** The API lists orders newest first unless told otherwise. */
+export const ORDER_DEFAULT_SORT = "-order_date";
 
 /**
  * Columns for a list of orders; a page about one customer or employee leaves
- * that column out. With sorting, Date and Total sort on the server.
+ * that column out. Date and Total sort on the server when the table is given sorting.
  */
-export function orderColumns(leaveOut?: "customer" | "employee", sorting?: OrderSorting) {
-  const date = sorting
-    ? {
-        ...dateColumn,
-        header: () => <SortHeader label="Date" field="order_date" {...sorting} firstDirection="desc" />,
-      }
-    : dateColumn;
-  const total = sorting
-    ? {
-        ...totalColumn,
-        header: () => (
-          <SortHeader label="Total" field="order_total" {...sorting} align="right" firstDirection="desc" />
-        ),
-      }
-    : totalColumn;
+export function orderColumns(leaveOut?: "customer" | "employee") {
   return column.columns([
     orderColumn,
-    date,
+    dateColumn,
     ...(leaveOut === "customer" ? [] : [customerColumn]),
     ...(leaveOut === "employee" ? [] : [employeeColumn]),
     shipToColumn,
-    total,
+    totalColumn,
     statusColumn,
   ]);
 }

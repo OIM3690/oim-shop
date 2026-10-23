@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { DataTable } from "@/components/data-table/data-table";
-import { orderColumns, type OrderSorting } from "@/components/order-columns";
+import { ORDER_DEFAULT_SORT, orderColumns } from "@/components/order-columns";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
+import type { TableSorting } from "@/lib/sorting";
 import type { OrderQuery } from "@/lib/api";
 import { ordersQuery } from "@/lib/queries";
 
@@ -11,7 +12,7 @@ interface OrderListProps {
   query: OrderQuery;
   leaveOut?: "customer" | "employee";
   onPage: (page: number) => void;
-  sorting?: OrderSorting;
+  sorting?: Omit<TableSorting, "defaultSort">;
   empty: { title: string; description: string; action?: ReactNode };
 }
 
@@ -28,9 +29,10 @@ export function OrderList({ query, leaveOut, onPage, sorting, empty }: OrderList
   return (
     <>
       <DataTable
-        columns={orderColumns(leaveOut, sorting)}
+        columns={orderColumns(leaveOut)}
         data={orders.data.items}
         stale={orders.isPlaceholderData}
+        sorting={sorting && { ...sorting, defaultSort: ORDER_DEFAULT_SORT }}
       />
       <Pager pagination={orders.data.pagination} onPage={onPage} />
     </>

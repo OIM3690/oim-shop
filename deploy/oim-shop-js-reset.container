@@ -1,12 +1,12 @@
 # One run of `npm run reset`: removes the orders entered in the app and puts
-# stock back to the seed, then exits. Started nightly by oim-shop-reset.timer.
+# stock back to the seed, then exits. Started nightly by oim-shop-js-reset.timer.
 [Unit]
 Description=oim-shop: nightly reset of entered orders and stock
 
 [Container]
 Image=ghcr.io/oim3690/oim-shop:latest
-Volume=oim-shop-data:/data
-EnvironmentFile=%h/.config/oim-shop/oim-shop.env
+Volume=oim-shop-js-data:/data
+EnvironmentFile=%h/.config/oim-shop-js/oim-shop-js.env
 Exec=node api/src/cli/reset.ts
 
 [Service]

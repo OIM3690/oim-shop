@@ -1,7 +1,7 @@
 # Quadlet unit for rootless podman: copy to ~/.config/containers/systemd/ on
-# the server, then `systemctl --user daemon-reload && systemctl --user start oim-shop`.
+# the server, then `systemctl --user daemon-reload && systemctl --user start oim-shop-js`.
 # The published port and the memory and CPU limits live in a drop-in on the
-# server (oim-shop.container.d/local.conf), not in this public file, e.g.
+# server (oim-shop-js.container.d/local.conf), not in this public file, e.g.
 #   [Container]
 #   PublishPort=127.0.0.1:<port>:8787
 #   [Service]
@@ -12,9 +12,9 @@ After=network-online.target
 
 [Container]
 Image=ghcr.io/oim3690/oim-shop:latest
-ContainerName=oim-shop
-Volume=oim-shop-data:/data
-EnvironmentFile=%h/.config/oim-shop/oim-shop.env
+ContainerName=oim-shop-js
+Volume=oim-shop-js-data:/data
+EnvironmentFile=%h/.config/oim-shop-js/oim-shop-js.env
 
 [Service]
 Restart=on-failure

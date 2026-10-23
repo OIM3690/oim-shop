@@ -1,0 +1,23 @@
+# Quadlet unit for rootless podman: copy to ~/.config/containers/systemd/ on
+# the server, then `systemctl --user daemon-reload && systemctl --user start oim-shop`.
+# The published port and the memory and CPU limits live in a drop-in on the
+# server (oim-shop.container.d/local.conf), not in this public file, e.g.
+#   [Container]
+#   PublishPort=127.0.0.1:<port>:8787
+#   [Service]
+#   MemoryMax=<limit>
+[Unit]
+Description=oim-shop, the Northwind sales system for OIM3690
+After=network-online.target
+
+[Container]
+Image=ghcr.io/oim3690/oim-shop:latest
+ContainerName=oim-shop
+Volume=oim-shop-data:/data
+EnvironmentFile=%h/.config/oim-shop/oim-shop.env
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

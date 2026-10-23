@@ -1,0 +1,9 @@
+[Unit]
+Description=oim-shop: reset entered orders every night at 03:30 Boston time
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 America/New_York
+Persistent=true
+
+[Install]
+WantedBy=timers.target

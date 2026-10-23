@@ -1,0 +1,13 @@
+# One run of `npm run sync`: pulls new orders from oim-api, then exits.
+# Started every hour by oim-shop-sync.timer; it holds memory only while it runs.
+[Unit]
+Description=oim-shop: sync new orders from oim-api
+
+[Container]
+Image=ghcr.io/oim3690/oim-shop:latest
+Volume=oim-shop-data:/data
+EnvironmentFile=%h/.config/oim-shop/oim-shop.env
+Exec=node api/src/cli/sync.ts
+
+[Service]
+Type=oneshot

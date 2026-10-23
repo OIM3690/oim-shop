@@ -22,12 +22,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
-      - name: Build, and check the GitHub Pages fallback
-        run: npm run build && cmp web/dist/index.html web/dist/404.html
-      - uses: actions/upload-pages-artifact@v5
-        if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'OIM3690/oim-shop'
-        with:
-          path: web/dist
+      - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm test
       - uses: actions/upload-artifact@v7
@@ -37,22 +32,34 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # Publishes the site at https://oim3690.github.io/oim-shop/ when a version
-  # tag (v2, v3, ...) is pushed and its tests pass, so the site always shows
-  # the latest release. Pushes to main only run the tests. Forks never deploy.
-  deploy:
+  # Builds the v3 image for the server (linux/amd64), starts it once to check
+  # that it seeds and answers, and pushes it to ghcr.io from main and from
+  # version tags. Forks and pull requests build and check but never push.
+  image:
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'OIM3690/oim-shop'
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    concurrency:
-      group: pages
-      cancel-in-progress: false
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/oim3690/oim-shop
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      - uses: actions/checkout@v7
+      - name: Build
+        run: docker build --platform linux/amd64 -t oim-shop:ci -f Containerfile .
+      - name: Start it once and ask for its health
+        run: |
+          docker run -d --name smoke -p 8787:8787 -e PUBLIC_URL=http://localhost:8787 oim-shop:ci
+          for i in $(seq 1 60); do curl -sf http://localhost:8787/api/health && break; sleep 2; done
+          curl -sf http://localhost:8787/api/health | grep -q '"status":"ok"'
+          curl -sf http://localhost:8787/orders/10248 | grep -q '<div id="root">'
+          docker logs smoke
+          docker rm -f smoke
+      - name: Push
+        if: github.event_name == 'push' && github.repository == 'OIM3690/oim-shop'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          tags="$IMAGE:sha-${GITHUB_SHA::7}"
+          if [ "$GITHUB_REF" = refs/heads/main ]; then tags="$tags $IMAGE:main"; fi
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then tags="$tags $IMAGE:${GITHUB_REF_NAME} $IMAGE:latest"; fi
+          for tag in $tags; do docker tag oim-shop:ci "$tag" && docker push "$tag"; done

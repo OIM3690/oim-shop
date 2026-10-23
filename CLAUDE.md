@@ -27,7 +27,7 @@ The diff between tags is teaching material. Each tag is a state where every test
 
 Search, filtering and paging always happen on a server (oim-api in `v1`/`v2`, the app's API in `v3`), never on the current page in the browser.
 
-Before each tag, Zhi reviews screenshots of every page in light and dark mode.
+Before each tag, take light and dark screenshots of every page and review them yourself; Zhi waived seeing them (2026-10-22). A fix to an earlier version goes on a short branch from its tag and is tagged `v2.1` and so on; that branch's own workflow deploys v2 to GitHub Pages.
 
 ## oim-api facts that shape the code
 
@@ -62,21 +62,24 @@ Copied from `~/.claude/templates/frontend-stack.md`, last verified 2026-10-20.
 
 ## Commands
 
-Run from the repository root; `web/` is an npm workspace. The machine is small, so run builds and test suites one at a time.
+Run from the repository root; `api/` and `web/` are npm workspaces. The machine is small, so run builds and test suites one at a time.
 
 - `npm install`, then `npx playwright install chromium` once.
-- `npm run dev`: the v2 app against the live oim-api, at `http://localhost:5173/oim-shop/`.
-- `npm run lint` (oxlint and Prettier), `npm run typecheck` (`tsc -b`), `npm run test:unit` (Vitest), `npm run build`.
-- `npm test`: Playwright. `v1-*` projects open `v1/index.html` from disk; `v2-*` projects run `npm run e2e:serve -w web`, a build made with `--mode e2e` (`web/.env.e2e` sets `VITE_API_MOCK=true`) served by `vite preview` on port 4173.
-- One test: `npx vitest run -t "<part of its name>"` inside `web/`, or `npx playwright test -g "<part of its name>" --project=v2-desktop`.
+- `npm run dev`: seeds `api/shop.db` if it is missing, then starts the API (port 8787, `node --watch`) and Vite (port 5173, forwarding `/api`). Ctrl+C stops both.
+- `npm run lint` (oxlint and Prettier in both packages), `npm run typecheck`, `npm run test:unit` (Vitest in web, then api), `npm run build` (web).
+- `npm test`: Playwright. `v1-*` projects open `v1/index.html` from disk; `v3-*` projects build web and run `e2e/server.ts` on port 4173.
+- `npm run seed` (refuses a database that has orders; `-- --force`), `npm run sync`, `npm run reset`. The api scripts load `api/.env` if it exists (`node --env-file-if-exists`); settings are in `api/src/config.ts`.
+- One test: `npx vitest run -t "<part of its name>"` inside `api/` or `web/`, or `npx playwright test -g "<part of its name>" --project=v3-desktop`.
+- Rebuild the seed from the pinned source: `node scripts/build-seed.ts`.
 
-## How v2 is put together
+## How v3 is put together
 
-- `web/src/lib/api.ts` is the only place that calls oim-api. Every response is parsed by a zod schema and the types are inferred from it; a field the API sends as null must be `.nullable()` there.
-- `web/src/lib/queries.ts` holds one react-query option set per kind of data. Pages call `useQuery(...)` and render loading, empty and error with `components/query-states.tsx`.
-- Routes are files under `web/src/routes/` (TanStack Router plugin; `routeTree.gen.ts` is generated and committed). Filters and the page number live in search params validated by zod with `.catch()`, so a bad address falls back instead of crashing. Changing a filter resets `page`.
-- Tables use TanStack Table v9 through `components/data-table/`, with no row features registered: the API does paging, filtering and ordering.
-- `web/src/mocks/handlers.ts` imitates oim-api over data recorded in `web/src/mocks/data/`. Vitest uses it through `msw/node` (`src/test/setup.ts` fails on any unhandled request); the e2e build uses it through the service worker in `web/public/mockServiceWorker.js`. Page tests render the whole app at a URL with `src/test/render.tsx`.
+- **The database.** `db/migrations/*.sql` run in order on `openDatabase`. `seed_*` tables hold the source data unshifted; `api/src/seed.ts` fills the app tables on oim-api's clock. `orders.lines_total`/`line_count` and `product_month_sales` are derived and must be refreshed (`api/src/totals.ts`) in the same transaction as any write to `order_lines`; the dashboard and every revenue figure read them, never the 600,000 lines.
+- **SQL.** Raw parameterized SQL through `node:sqlite`, no ORM. It refuses named parameters the statement does not use, so pass them through `usedBy()` (`api/src/http.ts`). Text matching uses the registered `fold()` (Unicode lowercase); customer IDs match `upper(trim(...))` both sides, because one source ID is `"Val2 "`.
+- **One description of the data.** `api/src/schemas.ts` holds every response shape and the input rules (`orderInput`, `displayName`). Routes parse their output with them; `web` imports them as `api/schemas`. Add a field there first.
+- **Routes.** `api/src/app.ts` builds the Hono app; `routes/*.ts` per resource. Write routes put `requireRep` on each route, never `.use()` on a sub-app that shares a prefix with read routes. Every non-GET request must carry the site's `Origin` (`sameOriginWrites`). Rate limits and `Cache-Control` are set in `app.ts`: anonymous GETs are `public, max-age=60`, anything for a signed-in user or under `/api/me` and `/api/auth` is `private, no-store`.
+- **Sign-in.** Arctic's GitHub client, no scopes; only the numeric GitHub ID is stored. Sessions store the SHA-256 of a random token.
+- **Web.** `web/src/lib/api.ts` is the only place that calls the API; `lib/queries.ts` holds the react-query options, and `refetchAfterWrite` refreshes everything a write can change. Filters, sort and page live in search params validated by zod with `.catch()`; changing a filter or the sort resets `page`. Tables use TanStack Table v9 with no row features; the API pages, filters and sorts.
+- **Tests.** API tests copy a template database seeded once per run (`api/test/global-setup.ts`). Web tests do the same and hand every `/api` request to the real Hono app through MSW (`web/src/test/api-server.ts`); jsdom cannot reach the migrations folder, so those copies open with `{ migrate: false }`. GitHub is played by MSW (`api/test/auth-helpers.ts`) on the server side and by Playwright's route on `/api/auth/github` in the browser.
+- **Deployment.** `Containerfile` builds one image; CI's `image` job builds it for `linux/amd64`, smoke-tests it and pushes it to `ghcr.io/oim3690/oim-shop` from `main` (`:main`) and from tags (`:vN`, `:latest`). `deploy/` holds the Quadlet units and timers; the port and the memory limits are in a drop-in on the server and in the local project memory, never in this repo.
 - Dark mode follows the operating system (`@custom-variant dark` is a media query in `index.css`); there is no `.dark` class.
-- The site deploys to GitHub Pages only when a `v*` tag is pushed and CI passes on it (the `github-pages` environment allows `v*` tags and no branch). Pushes to `main` run the tests and never deploy, so the live site is always the latest release.
-- `vite.config.ts` sets `base` to `/oim-shop/` (override with `VITE_BASE`) and copies `index.html` to `404.html` after a build for GitHub Pages.

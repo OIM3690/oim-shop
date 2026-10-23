@@ -4,4 +4,4 @@ If you find a security problem in oim-shop, report it privately through GitHub: 
 
 Include the steps to reproduce the problem and what you expected to happen. I will reply on the report.
 
-`v1` and `v2` have no server of their own and store nothing about you. From `v3`, the app stores your GitHub user ID and the display name you choose, and nothing else about you.
+`v1` and `v2` have no server of their own and store nothing about you. From `v3`, the app stores your numeric GitHub user ID and the display name you choose, and nothing else about you; the privacy page on the site explains what is kept and the nightly reset.

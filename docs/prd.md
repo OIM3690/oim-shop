@@ -1,6 +1,6 @@
 # oim-shop Product Requirements
 
-Status: agreed on 2026-10-22; `v1` and `v2` are released. Anything marked **Pending** is a proposal I have not decided yet.
+Status: agreed on 2026-10-22; `v1` and `v2` are released, `v3` is built and not yet deployed. Anything marked **Pending** is a proposal I have not decided yet.
 
 ## Purpose
 
@@ -133,12 +133,12 @@ TypeScript starts at `v2` because the interface describes the shape of every API
 
 ### Server and database (v3)
 
-**Pending. Recommended: Hono on Node, with SQLite as the database, in a container on a small server.**
+Hono on Node, with SQLite as the database (Node's built-in `node:sqlite`), in a container on a small server.
 
 - Hono routes look like Express routes (`app.get('/api/products', ...)`), so what you learn here transfers to the most common Node server framework.
 - A Hono handler receives a standard `Request` and returns a standard `Response`, the same objects you use with `fetch` in the browser.
 - SQLite keeps the whole database in one file. Orders and their lines are two ordinary tables, the dashboard is plain `GROUP BY` queries, and the schema lives in numbered SQL migration files.
-- The server types its routes, and the interface's API client reads those types, so a mismatch between the two fails the build. Input is validated with zod.
+- The server writes every response shape and every input rule once, as zod schemas in `api/src/schemas.ts`. The interface imports the same schemas, so a mismatch between the two fails the build, and the forms check the same rules the server checks.
 - On your machine the database is a file in the project, so you need no account to run or test the app.
 
 Alternatives considered: React with Supabase, which keeps the stack of the course's final projects but leaves no server code to read; Next.js, the most common React full-stack framework, which hides where the browser ends and the server begins; Hono on Cloudflare Workers with D1, whose free plan limits rows read and written per day tightly enough that the schema would be shaped around the quota.
@@ -156,7 +156,8 @@ oim-shop/
   api/              Hono server, sync and reset (v3 onward)
   db/migrations/    numbered SQL migrations (v3 onward)
   data/seed/        Northwind seed data and both copyright notices (v3 onward)
-  deploy/           container and timer files (v3 onward)
+  deploy/           Quadlet units and timers (v3 onward)
+  scripts/          the seed builder and the npm run dev launcher
   e2e/              Playwright tests
   docs/             this PRD and decision records
 ```
@@ -198,11 +199,12 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 ## Deployment
 
 - **Pending**: the live address. Proposed: `https://oim-shop-js.zhili.dev`.
-- The site deploys to GitHub Pages from GitHub Actions when a version tag is pushed and its tests pass, so `https://oim3690.github.io/oim-shop/` always shows the latest release. Each build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app on GitHub Pages.
-- From `v3`, GitHub Actions builds the container image and the server pulls it; nothing is built on the server. Migrations run before the new version starts. The live address moves from GitHub Pages to the server.
+- `v2` stays on GitHub Pages at `https://oim3690.github.io/oim-shop/`, deployed from its tag. Its build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app there.
+- From `v3`, GitHub Actions builds the container image (`linux/amd64`), starts it once to check it, and pushes it to `ghcr.io/oim3690/oim-shop`; the server pulls it, and nothing is built there. The app applies its migrations when it starts, and seeds an empty database on its first start.
+- On the server, rootless podman runs the image from the Quadlet files in `deploy/`; sync and reset are one-shot containers started by systemd timers, so they hold memory only while they run. The published port and the memory and CPU limits live in a drop-in on the server.
 
 ## Open items
 
-- Choice of server, framework and database for `v3`.
-- GitHub OAuth callback URLs for local development and production.
-- Whether Playwright runs on the development machine.
+- The live address for `v3`, its DNS record and its Caddy block.
+- The GitHub OAuth Apps for local development and production, and their callback URLs.
+- Measuring the container's memory on the server after the first deploy.

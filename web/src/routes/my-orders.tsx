@@ -3,16 +3,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { z } from "zod";
 import { DataTable } from "@/components/data-table/data-table";
-import { orderColumns } from "@/components/order-columns";
+import { ORDER_DEFAULT_SORT, orderColumns } from "@/components/order-columns";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
 import { RepGate } from "@/components/rep-gate";
 import { Button } from "@/components/ui/button";
 import { myOrdersQuery } from "@/lib/queries";
+import { cleanSearch } from "@/lib/search";
+import { sortParam } from "@/lib/sorting";
 
 export const Route = createFileRoute("/my-orders")({
-  validateSearch: z.object({ page: z.number().int().positive().optional().catch(undefined) }),
+  validateSearch: z.object({
+    sort: sortParam(["order_date", "order_total"] as const),
+    page: z.number().int().positive().optional().catch(undefined),
+  }),
   component: MyOrdersPage,
 });
 
@@ -37,9 +42,9 @@ function MyOrdersPage() {
 }
 
 function MyOrderList() {
-  const { page = 1 } = Route.useSearch();
+  const { sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const orders = useQuery(myOrdersQuery(page));
+  const orders = useQuery(myOrdersQuery({ sort, page }));
 
   if (orders.isPending) return <LoadingRows label="Loading your orders" />;
   if (orders.isError) {
@@ -54,10 +59,15 @@ function MyOrderList() {
         columns={orderColumns("employee")}
         data={orders.data.items}
         stale={orders.isPlaceholderData}
+        sorting={{
+          sort,
+          onSort: (next) => void navigate({ search: cleanSearch({ sort: next }) }),
+          defaultSort: ORDER_DEFAULT_SORT,
+        }}
       />
       <Pager
         pagination={orders.data.pagination}
-        onPage={(next) => void navigate({ search: { page: next > 1 ? next : undefined } })}
+        onPage={(next) => void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) })}
       />
     </>
   );

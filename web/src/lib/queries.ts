@@ -3,7 +3,7 @@
 // pages that need the same data share one request. After a write, the keys
 // in WRITE_AFFECTS are refetched, so every page shows the change at once.
 import { keepPreviousData, queryOptions, type QueryClient } from "@tanstack/react-query";
-import { api, type CustomerQuery, type OrderQuery, type ProductQuery } from "./api";
+import { api, type CustomerQuery, type OrderQuery, type ProductQuery, type SortQuery } from "./api";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -72,10 +72,10 @@ export const dashboardQuery = (range: { from?: string; to?: string }) =>
 
 export const meQuery = () => queryOptions({ queryKey: ["me"], queryFn: ({ signal }) => api.me(signal) });
 
-export const myOrdersQuery = (page: number) =>
+export const myOrdersQuery = (query: { page: number } & SortQuery) =>
   queryOptions({
-    queryKey: ["my-orders", page],
-    queryFn: ({ signal }) => api.myOrders(page, signal),
+    queryKey: ["my-orders", query],
+    queryFn: ({ signal }) => api.myOrders(query, signal),
     placeholderData: keepPreviousData,
   });
 

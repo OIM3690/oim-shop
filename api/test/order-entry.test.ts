@@ -237,4 +237,19 @@ describe("changing an order", () => {
     expect(mine.pagination.total).toBe(2);
     expect(mine.items.every((o) => o.employee_name === "Ana")).toBe(true);
   });
+
+  it("sorts your own orders on the server, like the order list", async () => {
+    const { app, alice } = await setup();
+    const small = { ...valid, lines: [{ product_id: 1, quantity: 1, discount: 0 }] };
+    const first = schemas.order.parse((await place(app, alice, small)).json);
+    const second = schemas.order.parse((await place(app, alice)).json);
+    const list = async (query: string) =>
+      schemas
+        .pageOf(schemas.orderSummary)
+        .parse(await (await app.request(`/api/me/orders${query}`, as(alice))).json())
+        .items.map((o) => o.order_id);
+    expect(await list("?sort=-order_total")).toEqual([second.order_id, first.order_id]);
+    expect(await list("?sort=order_total")).toEqual([first.order_id, second.order_id]);
+    expect((await app.request("/api/me/orders?sort=password", as(alice))).status).toBe(400);
+  });
 });

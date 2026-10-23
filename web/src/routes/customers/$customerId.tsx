@@ -9,15 +9,19 @@ import { Button } from "@/components/ui/button";
 import { formatCount, formatMoney } from "@/lib/format";
 import { customerQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
+import { sortParam } from "@/lib/sorting";
 
 export const Route = createFileRoute("/customers/$customerId")({
-  validateSearch: z.object({ page: z.number().int().positive().optional().catch(undefined) }),
+  validateSearch: z.object({
+    sort: sortParam(["order_date", "order_total"] as const),
+    page: z.number().int().positive().optional().catch(undefined),
+  }),
   component: CustomerPage,
 });
 
 function CustomerPage() {
   const { customerId } = Route.useParams();
-  const { page = 1 } = Route.useSearch();
+  const { sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
   const customer = useQuery(customerQuery(customerId));
 
@@ -62,9 +66,12 @@ function CustomerPage() {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Orders</h2>
         <OrderList
-          query={{ customer_id: c.customer_id, page }}
+          query={{ customer_id: c.customer_id, sort, page }}
+          sorting={{ sort, onSort: (next) => void navigate({ search: cleanSearch({ sort: next }) }) }}
           leaveOut="customer"
-          onPage={(next) => void navigate({ search: cleanSearch({ page: next > 1 ? next : undefined }) })}
+          onPage={(next) =>
+            void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) })
+          }
           empty={{ title: "No orders yet.", description: "This customer has not placed an order so far." }}
         />
       </section>

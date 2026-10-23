@@ -12,9 +12,13 @@ import { fullName } from "@/lib/employees";
 import { formatCount, formatDate, formatMoney } from "@/lib/format";
 import { employeeQuery, employeesQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
+import { sortParam } from "@/lib/sorting";
 
 export const Route = createFileRoute("/employees/$employeeId")({
-  validateSearch: z.object({ page: z.number().int().positive().optional().catch(undefined) }),
+  validateSearch: z.object({
+    sort: sortParam(["order_date", "order_total"] as const),
+    page: z.number().int().positive().optional().catch(undefined),
+  }),
   component: EmployeePage,
 });
 
@@ -52,7 +56,7 @@ function useOrdersBeforeHire(employee: Employee | undefined) {
 
 function EmployeePage() {
   const { employeeId } = Route.useParams();
-  const { page = 1 } = Route.useSearch();
+  const { sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
   const employee = useQuery(employeeQuery(Number(employeeId)));
   const everyone = useQuery(employeesQuery());
@@ -119,9 +123,12 @@ function EmployeePage() {
           </p>
         ) : null}
         <OrderList
-          query={{ employee_id: e.employee_id, page }}
+          query={{ employee_id: e.employee_id, sort, page }}
+          sorting={{ sort, onSort: (next) => void navigate({ search: cleanSearch({ sort: next }) }) }}
           leaveOut="employee"
-          onPage={(next) => void navigate({ search: cleanSearch({ page: next > 1 ? next : undefined }) })}
+          onPage={(next) =>
+            void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) })
+          }
           empty={{ title: "No orders yet.", description: "This employee has not taken an order so far." }}
         />
       </section>

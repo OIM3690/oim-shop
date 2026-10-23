@@ -148,8 +148,8 @@ export const api = {
   setDisplayName: (display_name: string) =>
     request("/me", schemas.me, { method: "PUT", body: { display_name } }),
   signOut: () => request("/auth/logout", nothing, { method: "POST" }),
-  myOrders: (page: number, signal?: AbortSignal) =>
-    request("/me/orders", schemas.pageOf(schemas.orderSummary), { params: { page }, signal }),
+  myOrders: (query: { page: number } & SortQuery, signal?: AbortSignal) =>
+    request("/me/orders", schemas.pageOf(schemas.orderSummary), { params: { ...query }, signal }),
 
   placeOrder: (input: OrderInput) => request("/orders", schemas.order, { method: "POST", body: input }),
   editOrder: (id: number, input: OrderInput) =>

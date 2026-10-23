@@ -17,7 +17,7 @@ import { requireRep } from "../guards.ts";
 import { pageQuery, paginate, query } from "../http.ts";
 import { monthsOf, refreshOrderTotals, refreshProductMonthSales } from "../totals.ts";
 import { SAME_CUSTOMER } from "./customers.ts";
-import { ORDER_FROM, ORDER_SELECT, readOrder, toOrderSummary } from "./orders.ts";
+import { ORDER_FROM, ORDER_SELECT, orderListQuery, readOrder, toOrderSummary } from "./orders.ts";
 
 const FIRST_ENTERED_ID = 1_000_000;
 
@@ -212,22 +212,27 @@ export const orderEntry = new Hono<AppEnv>()
     return c.json(readOrder(c.var.db, own.orderId));
   });
 
-/** GET /api/me/orders: the signed-in rep's own orders, newest first. */
-export const myOrders = new Hono<AppEnv>().get("/", requireRep, query({ ...pageQuery }), (c) => {
-  const q = c.req.valid("query");
-  return c.json(
-    paginate(
-      c.var.db,
-      {
-        select: ORDER_SELECT,
-        from: ORDER_FROM,
-        where: ["o.entered_by_user = :user"],
-        orderBy: "o.order_date DESC, o.order_id DESC",
-      },
-      { user: c.var.user!.user_id },
-      q.page,
-      q.per_page,
-      toOrderSummary,
-    ),
-  );
-});
+/** GET /api/me/orders: the signed-in rep's own orders, newest first unless sorted like /api/orders. */
+export const myOrders = new Hono<AppEnv>().get(
+  "/",
+  requireRep,
+  query({ ...pageQuery, sort: orderListQuery.sort }),
+  (c) => {
+    const q = c.req.valid("query");
+    return c.json(
+      paginate(
+        c.var.db,
+        {
+          select: ORDER_SELECT,
+          from: ORDER_FROM,
+          where: ["o.entered_by_user = :user"],
+          orderBy: `${q.sort}, o.order_id DESC`,
+        },
+        { user: c.var.user!.user_id },
+        q.page,
+        q.per_page,
+        toOrderSummary,
+      ),
+    );
+  },
+);

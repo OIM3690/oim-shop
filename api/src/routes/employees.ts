@@ -16,13 +16,16 @@ const FROM = `
 const toEmployee = (row: Record<string, unknown>) =>
   schemas.employee.parse({ ...row, is_rep: bool(row.is_rep) });
 
+export function readEmployee(db: AppEnv["Variables"]["db"], employeeId: number) {
+  const row = db.prepare(`SELECT ${SELECT} FROM ${FROM} WHERE e.employee_id = ?`).get(employeeId);
+  return row ? toEmployee(row) : null;
+}
+
 export const employees = new Hono<AppEnv>()
   .get("/", (c) =>
     c.json(c.var.db.prepare(`SELECT ${SELECT} FROM ${FROM} ORDER BY e.employee_id`).all().map(toEmployee)),
   )
   .get("/:id{[0-9]+}", (c) => {
-    const row = c.var.db
-      .prepare(`SELECT ${SELECT} FROM ${FROM} WHERE e.employee_id = ?`)
-      .get(Number(c.req.param("id")));
-    return row ? c.json(toEmployee(row)) : c.json(notFound(`employee ${c.req.param("id")}`), 404);
+    const found = readEmployee(c.var.db, Number(c.req.param("id")));
+    return found ? c.json(found) : c.json(notFound(`employee ${c.req.param("id")}`), 404);
   });

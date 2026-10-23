@@ -120,3 +120,6 @@ export const dashboard = z.object({
 });
 
 export type Dashboard = z.infer<typeof dashboard>;
+
+export const me = z.object({ signed_in: z.boolean(), employee: employee.nullable() });
+export type Me = z.infer<typeof me>;

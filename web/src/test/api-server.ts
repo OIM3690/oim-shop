@@ -2,9 +2,8 @@
 // makes to /api and hands it to the Hono app, which reads a private copy of
 // the seeded database. A browser would add the session cookie and its Origin
 // header itself; jsdom does not, so the handler adds them.
-import { copyFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { openDatabase, signInDirectly, testApp, type Database } from "api/testing";
 import { http } from "msw";
 import { setupServer } from "msw/node";
@@ -13,6 +12,7 @@ import { inject } from "vitest";
 const ORIGIN = "http://localhost:3000";
 
 let db: Database;
+let dir = "";
 let app: ReturnType<typeof testApp>;
 let cookie = "";
 
@@ -27,11 +27,19 @@ export const server = setupServer(
 
 /** Starts each test from a fresh copy of the seeded database, signed out. */
 export function resetApi() {
-  const path = join(mkdtempSync(join(tmpdir(), "oim-shop-web-")), "shop.db");
-  copyFileSync(inject("templateDb"), path);
+  const template = inject("templateDb");
+  dir = mkdtempSync(join(dirname(template), "copy-"));
+  const path = join(dir, "shop.db");
+  copyFileSync(template, path);
   db = openDatabase(path, { migrate: false });
   app = testApp(db, ORIGIN);
   cookie = "";
+}
+
+/** Closes the test's copy of the database and removes it. */
+export function closeApi() {
+  db.close();
+  rmSync(dir, { recursive: true, force: true });
 }
 
 /** The database behind the API, for tests that check what a page should show. */

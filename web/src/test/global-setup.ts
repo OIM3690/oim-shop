@@ -1,16 +1,19 @@
 // Seeds one template database for the run; every test gets its own copy.
-import { mkdtempSync } from "node:fs";
+// The copies go in the template's folder, which is removed when the run ends.
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { seededDatabase } from "api/testing";
 import type { TestProject } from "vitest/node";
 
 export default function setup(project: TestProject) {
-  const path = join(mkdtempSync(join(tmpdir(), "oim-shop-web-template-")), "template.db");
+  const dir = mkdtempSync(join(tmpdir(), "oim-shop-web-template-"));
+  const path = join(dir, "template.db");
   const db = seededDatabase(path);
   db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
   db.close();
   project.provide("templateDb", path);
+  return () => rmSync(dir, { recursive: true, force: true });
 }
 
 declare module "vitest" {

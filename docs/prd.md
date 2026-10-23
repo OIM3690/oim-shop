@@ -113,7 +113,7 @@ The order list carries totals and `employee_id` but no lines. Reading every orde
 These come from the source data. The app shows them as they are and explains them on the page where they appear.
 
 - The source has 1,337 orders dated before the hire date of the employee who took them.
-- Two customer companies are named `IT` and have no city or country. One of them has the ID `Val2 `, with a space at the end, and `oim-api` cannot look it up by that ID.
+- Two customer companies are named `IT` and have no city or country. One of them has the ID `Val2 `, with a space at the end; `oim-api` matches IDs ignoring case and surrounding spaces.
 - Some orders have many lines: up to 77, one for every product.
 - The source has 21 orders that never shipped, so their shipped date stays empty.
 

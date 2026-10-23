@@ -32,6 +32,10 @@ function paginate<T>(items: T[], params: URLSearchParams) {
 const contains = (value: string, part: string | null) =>
   !part || value.toLowerCase().includes(part.toLowerCase());
 
+// oim-api matches customer IDs ignoring case and surrounding spaces, since one
+// ID in the source data is "Val2 ", with a space at the end.
+const sameId = (a: string, b: string) => a.trim().toUpperCase() === b.trim().toUpperCase();
+
 const notFound = (what: string) => HttpResponse.json({ detail: `No ${what}` }, { status: 404 });
 
 export const handlers = [
@@ -66,7 +70,7 @@ export const handlers = [
   }),
 
   http.get(`${API}/customers/:id`, ({ params }) => {
-    const customer = customers.find((c) => c.customer_id === String(params.id).toUpperCase());
+    const customer = customers.find((c) => sameId(c.customer_id, String(params.id)));
     return customer ? HttpResponse.json(customer) : notFound(`customer ${params.id}`);
   }),
 
@@ -79,7 +83,7 @@ export const handlers = [
 
   http.get(`${API}/orders`, ({ request }) => {
     const params = new URL(request.url).searchParams;
-    const customer = params.get("customer_id")?.toUpperCase();
+    const customer = params.get("customer_id");
     const employee = params.get("employee_id");
     const country = params.get("country")?.toLowerCase();
     const from = params.get("from_date");
@@ -87,7 +91,7 @@ export const handlers = [
     const matches = orders
       .filter(
         (o) =>
-          (!customer || o.customer_id === customer) &&
+          (!customer || sameId(o.customer_id, customer)) &&
           (!employee || String(o.employee_id) === employee) &&
           (!country || o.ship_country.toLowerCase() === country) &&
           (!from || o.order_date.slice(0, 10) >= from) &&

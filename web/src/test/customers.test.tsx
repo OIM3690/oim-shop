@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { API, data } from "@/mocks/handlers";
@@ -53,6 +53,17 @@ describe("customers", () => {
     const count = data.orders.filter((o) => o.customer_id === "ALFKI").length;
     expect(await screen.findByText(`1–${count} of ${count}`)).toBeInTheDocument();
     expect(requests.at(-1)!.searchParams.get("customer_id")).toBe("ALFKI");
+  });
+
+  it("opens the customer whose ID ends in a space", async () => {
+    const { user, location } = renderApp("/customers?name=it");
+    await screen.findByText(/of \d+$/);
+    const val2 = rows().find((row) => row.textContent?.includes("Val2"))!;
+    await user.click(within(val2).getByRole("link", { name: "IT" }));
+
+    expect(await screen.findByRole("heading", { name: "IT" })).toBeInTheDocument();
+    expect(screen.getByText("Val2", { selector: "dd" })).toBeInTheDocument();
+    expect(location().pathname).toMatch(/\/customers\/Val2%20$/);
   });
 
   it("says so when a customer does not exist", async () => {

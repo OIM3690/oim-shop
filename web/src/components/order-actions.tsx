@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { PackageCheck, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -24,6 +25,7 @@ export function OrderActions({ order }: { order: OrderSummary }) {
   const navigate = useNavigate();
   const canChange = useCanChange(order);
   const onError = (error: Error) => toast.error(error.message);
+  const [confirming, setConfirming] = useState(false);
 
   const ship = useMutation({
     mutationFn: () => api.shipOrder(order.order_id),
@@ -41,7 +43,10 @@ export function OrderActions({ order }: { order: OrderSummary }) {
       await navigate({ to: "/my-orders" });
     },
     onError,
+    onSettled: () => setConfirming(false),
   });
+  // One change at a time: a second one would race the first on the server.
+  const busy = ship.isPending || cancel.isPending;
 
   if (!canChange) return null;
   return (
@@ -52,13 +57,13 @@ export function OrderActions({ order }: { order: OrderSummary }) {
           Edit
         </Link>
       </Button>
-      <Button variant="outline" onClick={() => ship.mutate()} disabled={ship.isPending}>
+      <Button variant="outline" onClick={() => ship.mutate()} disabled={busy}>
         <PackageCheck aria-hidden="true" />
         Mark shipped
       </Button>
-      <AlertDialog>
+      <AlertDialog open={confirming} onOpenChange={(open) => !cancel.isPending && setConfirming(open)}>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive">
+          <Button variant="destructive" disabled={busy}>
             <Trash2 aria-hidden="true" />
             Cancel order
           </Button>
@@ -71,8 +76,17 @@ export function OrderActions({ order }: { order: OrderSummary }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep the order</AlertDialogCancel>
-            <AlertDialogAction onClick={() => cancel.mutate()}>Cancel order</AlertDialogAction>
+            <AlertDialogCancel disabled={cancel.isPending}>Keep the order</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancel.isPending}
+              onClick={(event) => {
+                // Stay open until the server answers, so the result is seen here.
+                event.preventDefault();
+                cancel.mutate();
+              }}
+            >
+              Cancel order
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

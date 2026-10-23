@@ -1,6 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
+import { http } from "msw";
 import { describe, expect, it } from "vitest";
-import { signInAs, testDb, value } from "./api-server";
+import { server, signInAs, testDb, value } from "./api-server";
+import { recordRequests } from "./helpers";
 import { renderApp } from "./render";
 
 const stock = (productId: number) =>
@@ -90,6 +92,30 @@ describe("entering an order", () => {
     await waitFor(() => expect(location().pathname).toBe("/my-orders"));
     expect(stock(1)).toBe(chai);
     expect(await screen.findByText("You have not entered an order yet.")).toBeInTheDocument();
+  });
+
+  it("holds every action while a cancellation is on its way", async () => {
+    signInAs(3006, "Ana");
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const cancels = recordRequests("/orders/1000000/cancel");
+    // Answering nothing passes the request on to the real API once released.
+    server.use(http.post("http://localhost:3000/api/orders/:id/cancel", async () => void (await held)));
+    const { user, location } = renderApp("/orders/new");
+    await user.selectOptions(await screen.findByLabelText("Customer"), "Alfreds Futterkiste");
+    await user.selectOptions(screen.getByLabelText("Product"), "Chai");
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await screen.findByRole("heading", { name: "Order 1000000" });
+
+    await user.click(screen.getByRole("button", { name: "Cancel order" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel order" }));
+
+    expect(within(dialog).getByRole("button", { name: "Cancel order" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Mark shipped", hidden: true })).toBeDisabled();
+    release();
+    await waitFor(() => expect(location().pathname).toBe("/my-orders"));
+    expect(cancels).toHaveLength(1);
   });
 
   it("does not offer changes on someone else's order", async () => {

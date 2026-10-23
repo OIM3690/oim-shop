@@ -10,6 +10,9 @@ export function openDatabase(path: string): Database {
   const db = new DatabaseSync(path);
   // WAL lets the web server read while sync or reset writes.
   db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;");
+  // SQLite's own lower() only knows ASCII, so "RÖSSLE" would not find
+  // "Rössle". fold() lowercases with JavaScript's full Unicode rules.
+  db.function("fold", { deterministic: true }, (text) => (text === null ? null : String(text).toLowerCase()));
   migrate(db);
   return db;
 }

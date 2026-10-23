@@ -1,0 +1,106 @@
+// The shape of every response the API sends, written once as zod schemas.
+// The server's tests parse its responses with them, and the web app imports
+// the same schemas (as "api/schemas") to check what it receives, so the two
+// halves cannot drift apart unnoticed.
+import { z } from "zod";
+
+export const pagination = z.object({
+  page: z.number(),
+  per_page: z.number(),
+  total: z.number(),
+  pages: z.number(),
+  has_next: z.boolean(),
+  has_prev: z.boolean(),
+});
+
+export const pageOf = <T extends z.ZodType>(item: T) => z.object({ items: z.array(item), pagination });
+
+export const category = z.object({ category_id: z.number(), name: z.string(), description: z.string() });
+
+export const shipper = z.object({ shipper_id: z.number(), name: z.string() });
+
+export const product = z.object({
+  product_id: z.number(),
+  name: z.string(),
+  category_id: z.number(),
+  category: z.string(),
+  supplier: z.string(),
+  quantity_per_unit: z.string(),
+  unit_price_dollars: z.number(),
+  units_in_stock: z.number(),
+  reorder_level: z.number(),
+  low_stock: z.boolean(),
+  discontinued: z.boolean(),
+  revenue_dollars: z.number(),
+});
+
+export const customer = z.object({
+  customer_id: z.string(),
+  company_name: z.string(),
+  contact_name: z.string(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+  order_count: z.number(),
+  revenue_dollars: z.number(),
+});
+
+export const employee = z.object({
+  employee_id: z.number(),
+  first_name: z.string(),
+  last_name: z.string(),
+  name: z.string(),
+  title: z.string(),
+  reports_to: z.number().nullable(),
+  hire_date: z.string(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+  is_rep: z.boolean(),
+  order_count: z.number(),
+  revenue_dollars: z.number(),
+});
+
+export const orderSummary = z.object({
+  order_id: z.number(),
+  customer_id: z.string(),
+  customer_name: z.string(),
+  order_date: z.string(),
+  required_date: z.string(),
+  shipped_date: z.string().nullable(),
+  shipper_id: z.number(),
+  shipper: z.string(),
+  ship_city: z.string().nullable(),
+  ship_country: z.string().nullable(),
+  freight_dollars: z.number(),
+  line_count: z.number(),
+  order_total_dollars: z.number(),
+  employee_id: z.number(),
+  employee_name: z.string(),
+  entered: z.boolean(),
+});
+
+export const orderLine = z.object({
+  product_id: z.number(),
+  product_name: z.string(),
+  unit_price_dollars: z.number(),
+  quantity: z.number(),
+  discount_fraction: z.number(),
+  line_total_dollars: z.number(),
+});
+
+export const order = orderSummary.extend({ lines: z.array(orderLine) });
+
+export const health = z.object({
+  status: z.literal("ok"),
+  orders: z.number(),
+  last_sync: z.string().nullable(),
+});
+
+export type Pagination = z.infer<typeof pagination>;
+export type Category = z.infer<typeof category>;
+export type Shipper = z.infer<typeof shipper>;
+export type Product = z.infer<typeof product>;
+export type Customer = z.infer<typeof customer>;
+export type Employee = z.infer<typeof employee>;
+export type OrderSummary = z.infer<typeof orderSummary>;
+export type OrderLine = z.infer<typeof orderLine>;
+export type Order = z.infer<typeof order>;

@@ -1,6 +1,6 @@
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const count = new Intl.NumberFormat("en-US");
-const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
+const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 });
 const date = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric" });
 
 export const formatMoney = (dollars: number) => money.format(dollars);

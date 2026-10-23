@@ -11,9 +11,10 @@ describe("format", () => {
     expect(formatCount(15315)).toBe("15,315");
   });
 
-  it("shows a discount as a whole percent", () => {
+  it("shows a discount to the tenth of a percent the order form accepts", () => {
     expect(formatPercent(0.25)).toBe("25%");
     expect(formatPercent(0)).toBe("0%");
+    expect(formatPercent(0.125)).toBe("12.5%");
   });
 
   it("shows the calendar date of a timestamp or a date", () => {

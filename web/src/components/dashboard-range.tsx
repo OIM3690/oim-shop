@@ -99,7 +99,8 @@ function MonthField({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
       >
-        {MONTHS.map((m) => (
+        {/* A month from the address may be older than the menu reaches; show it anyway. */}
+        {(MONTHS.includes(value) ? MONTHS : [...MONTHS, value].sort().reverse()).map((m) => (
           <NativeSelectOption key={m} value={m}>
             {formatMonth(m)}
           </NativeSelectOption>

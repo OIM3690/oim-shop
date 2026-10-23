@@ -64,4 +64,11 @@ describe("dashboard", () => {
     await user.selectOptions(screen.getByLabelText("To"), "2026-02");
     await waitFor(() => expect(location().search).toEqual({ from: "2026-02", to: "2026-02" }));
   });
+
+  it("shows months from the address in the menus, even older ones", async () => {
+    renderApp("/?from=2016-01&to=2016-02");
+    await screen.findByText("Jan 2016 to Feb 2016");
+    expect(screen.getByLabelText("From")).toHaveDisplayValue("Jan 2016");
+    expect(screen.getByLabelText("To")).toHaveDisplayValue("Feb 2016");
+  });
 });

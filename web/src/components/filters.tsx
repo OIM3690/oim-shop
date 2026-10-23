@@ -106,9 +106,10 @@ interface DateFieldProps {
   label: string;
   value: string | undefined;
   onChange: (value: string | undefined) => void;
+  error?: string;
 }
 
-export function DateField({ id, label, value, onChange }: DateFieldProps) {
+export function DateField({ id, label, value, onChange, error }: DateFieldProps) {
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>
@@ -117,7 +118,14 @@ export function DateField({ id, label, value, onChange }: DateFieldProps) {
         type="date"
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value || undefined)}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
+      {error ? (
+        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

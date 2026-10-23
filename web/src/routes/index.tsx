@@ -11,7 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Dashboard } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
-import { formatMonth, formatMonthTick } from "@/lib/months";
+import { formatMonth, formatMonthTick, isReversed } from "@/lib/months";
 import { dashboardQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,9 @@ const compactMoney = new Intl.NumberFormat("en-US", {
 function DashboardPage() {
   const { from, to } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const dashboard = useQuery(dashboardQuery({ from, to }));
+  // A reversed range is flagged beside the menus; asking the server would only be refused.
+  const reversed = isReversed(from, to);
+  const dashboard = useQuery({ ...dashboardQuery({ from, to }), enabled: !reversed });
 
   return (
     <>
@@ -51,7 +53,7 @@ function DashboardPage() {
       />
       <DateRange from={from} to={to} onChange={(range) => void navigate({ search: range })} />
 
-      {dashboard.isPending ? (
+      {reversed ? null : dashboard.isPending ? (
         <div role="status" aria-label="Loading the dashboard" className="grid gap-4 md:grid-cols-3">
           {Array.from({ length: 3 }, (_, i) => (
             <Skeleton key={i} className="h-28" />

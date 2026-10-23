@@ -22,3 +22,7 @@ export function formatMonthTick(month: string) {
   const [year, m] = month.split("-").map(Number);
   return m === 1 ? String(year) : short.format(new Date(year, m - 1, 1));
 }
+
+/** True when a range ends before it starts; "2026-10" and "2026-10-01" both compare as text. */
+export const isReversed = (from: string | undefined, to: string | undefined) =>
+  Boolean(from && to && from > to);

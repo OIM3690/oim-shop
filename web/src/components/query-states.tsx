@@ -103,6 +103,13 @@ export function ErrorState({ error, what, onRetry, notFound, titleLevel }: Error
   }
 
   const tooMany = status === 429;
+  // No status means the request never reached the API.
+  const advice =
+    status === undefined
+      ? "Check your internet connection, then try again."
+      : status >= 500
+        ? "The server ran into a problem. Try again in a moment."
+        : `The API refused the request: ${error instanceof Error ? error.message : status}`;
   return (
     <Empty className="border" role="alert">
       <EmptyHeader>
@@ -113,9 +120,7 @@ export function ErrorState({ error, what, onRetry, notFound, titleLevel }: Error
           <Heading>{tooMany ? "Too many requests for now." : `${what} did not load.`}</Heading>
         </EmptyTitle>
         <EmptyDescription>
-          {tooMany
-            ? "The API limits how often one network can ask. Wait a minute, then try again."
-            : "Check your internet connection, then try again."}
+          {tooMany ? "The API limits how often one network can ask. Wait a minute, then try again." : advice}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>

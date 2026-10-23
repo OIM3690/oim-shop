@@ -80,6 +80,7 @@ describe("products", () => {
     );
     const { user } = renderApp("/products");
     expect(await screen.findByText("The product list did not load.")).toBeInTheDocument();
+    expect(screen.getByText("The server ran into a problem. Try again in a moment.")).toBeInTheDocument();
     fail = false;
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByText("1–25 of 77")).toBeInTheDocument();

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { allCustomersQuery, directoryQuery, optionsFailed } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 import { sortParam } from "@/lib/sorting";
+import { isReversed } from "@/lib/months";
 import { useCountries } from "@/lib/use-countries";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -39,6 +40,7 @@ function OrdersPage() {
   const filter = (next: Partial<OrderSearch>) =>
     navigate({ search: (prev) => cleanSearch({ ...prev, ...next, page: undefined }) });
   const filtered = Boolean(customer || employee || country || from || to);
+  const reversed = isReversed(from, to);
 
   return (
     <>
@@ -77,7 +79,13 @@ function OrdersPage() {
           onChange={(value) => filter({ country: value })}
         />
         <DateField id="order-from" label="From" value={from} onChange={(value) => filter({ from: value })} />
-        <DateField id="order-to" label="To" value={to} onChange={(value) => filter({ to: value })} />
+        <DateField
+          id="order-to"
+          label="To"
+          value={to}
+          onChange={(value) => filter({ to: value })}
+          error={reversed ? "The From date is after the To date." : undefined}
+        />
         {filtered ? (
           <Button variant="ghost" onClick={() => void navigate({ search: {} })}>
             Clear filters
@@ -85,29 +93,31 @@ function OrdersPage() {
         ) : null}
       </FilterBar>
 
-      <OrderList
-        query={{
-          customer_id: customer,
-          employee_id: employee,
-          country,
-          from_date: from,
-          to_date: to,
-          sort,
-          page,
-        }}
-        sorting={{ sort, onSort: (next) => void filter({ sort: next }) }}
-        onPage={(next) =>
-          void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) })
-        }
-        empty={
-          filtered
-            ? {
-                title: "No orders match these filters.",
-                description: "Widen the date range, or clear the filters.",
-              }
-            : { title: "No orders yet.", description: "Orders appear here as customers place them." }
-        }
-      />
+      {reversed ? null : (
+        <OrderList
+          query={{
+            customer_id: customer,
+            employee_id: employee,
+            country,
+            from_date: from,
+            to_date: to,
+            sort,
+            page,
+          }}
+          sorting={{ sort, onSort: (next) => void filter({ sort: next }) }}
+          onPage={(next) =>
+            void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) })
+          }
+          empty={
+            filtered
+              ? {
+                  title: "No orders match these filters.",
+                  description: "Widen the date range, or clear the filters.",
+                }
+              : { title: "No orders yet.", description: "Orders appear here as customers place them." }
+          }
+        />
+      )}
     </>
   );
 }

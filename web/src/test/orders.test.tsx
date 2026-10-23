@@ -68,4 +68,12 @@ describe("orders", () => {
     renderApp("/orders/1");
     expect(await screen.findByText("There is no order 1.")).toBeInTheDocument();
   });
+
+  it("flags a date range that ends before it starts, without asking the server", async () => {
+    const requests = recordRequests("/orders");
+    renderApp("/orders?from=2026-10-10&to=2026-10-01");
+    expect(await screen.findByText("The From date is after the To date.")).toBeInTheDocument();
+    expect(screen.getByLabelText("To")).toHaveAccessibleDescription("The From date is after the To date.");
+    expect(requests).toHaveLength(0);
+  });
 });

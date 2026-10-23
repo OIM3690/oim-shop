@@ -1,0 +1,7 @@
+dist
+dist-e2e
+src/components/ui
+src/hooks
+src/routeTree.gen.ts
+src/mocks/data
+public/mockServiceWorker.js

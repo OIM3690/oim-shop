@@ -2,3 +2,6 @@ node_modules/
 test-results/
 playwright-report/
 .env
+dist/
+dist-e2e/
+*.tsbuildinfo

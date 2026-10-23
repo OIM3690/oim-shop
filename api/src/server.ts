@@ -9,7 +9,13 @@ import { bostonNow } from "./clock.ts";
 import { config } from "./config.ts";
 import { openDatabase } from "./db.ts";
 
-const app = createApp({ db: openDatabase(config.databasePath), now: () => bostonNow() });
+const app = createApp({
+  db: openDatabase(config.databasePath),
+  now: () => bostonNow(),
+  publicUrl: config.publicUrl,
+  github: config.github,
+  clientIpHeader: config.clientIpHeader,
+});
 
 if (config.webDist) {
   const indexHtml = readFileSync(join(config.webDist, "index.html"), "utf8");

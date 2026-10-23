@@ -12,6 +12,8 @@ const env = z
     PUBLIC_URL: z.url().default("http://localhost:5173"),
     /** The built web app to serve next to /api; empty in development, where Vite serves it. */
     WEB_DIST: z.string().default(""),
+    /** Set to cf-connecting-ip behind Cloudflare, so rate limits count visitors and not the proxy. */
+    CLIENT_IP_HEADER: z.string().default(""),
     GITHUB_CLIENT_ID: z.string().default(""),
     GITHUB_CLIENT_SECRET: z.string().default(""),
   })
@@ -24,5 +26,6 @@ export const config = {
   host: env.HOST,
   publicUrl: env.PUBLIC_URL.replace(/\/$/, ""),
   webDist: env.WEB_DIST,
+  clientIpHeader: env.CLIENT_IP_HEADER || undefined,
   github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET },
 };

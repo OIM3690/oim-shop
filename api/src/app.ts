@@ -6,6 +6,7 @@ import { customers } from "./routes/customers.ts";
 import { dashboard } from "./routes/dashboard.ts";
 import { employees } from "./routes/employees.ts";
 import { me } from "./routes/me.ts";
+import { myOrders, orderEntry } from "./routes/order-entry.ts";
 import { orders } from "./routes/orders.ts";
 import { products } from "./routes/products.ts";
 import { readSession, type SessionUser } from "./session.ts";
@@ -52,9 +53,11 @@ export function createApp({ db, now, publicUrl = "http://localhost:5173", github
     .route("/products", products)
     .route("/customers", customers)
     .route("/orders", orders)
+    .route("/orders", orderEntry)
     .route("/employees", employees)
     .route("/dashboard", dashboard)
     .route("/auth", auth)
+    .route("/me/orders", myOrders)
     .route("/me", me);
 
   return new Hono().route("/api", api);

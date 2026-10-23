@@ -114,4 +114,17 @@ describe("products", () => {
     expect(await screen.findByText("Low stock")).toBeInTheDocument();
     expect(screen.queryByText("Below reorder level")).not.toBeInTheDocument();
   });
+
+  it("says the categories did not load instead of offering an empty menu", async () => {
+    server.use(http.get("http://localhost:3000/api/categories", () => new Response(null, { status: 500 })));
+    const { user } = renderApp("/products");
+    await screen.findByText("1–25 of 77");
+    expect(await screen.findByRole("combobox", { name: "Category" })).toBeDisabled();
+    expect(screen.getByRole("option", { name: "Categories did not load" })).toBeInTheDocument();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again: Category" }));
+    expect(await screen.findByRole("option", { name: "Beverages" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Category" })).toBeEnabled();
+  });
 });

@@ -105,7 +105,8 @@ function CustomersPage() {
           label="Country"
           allLabel="All countries"
           value={country}
-          options={countries}
+          options={countries.options}
+          failed={countries.failed}
           onChange={(value) => filter({ country: value })}
         />
       </FilterBar>

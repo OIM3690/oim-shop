@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { z } from "zod";
 import { DataTable } from "@/components/data-table/data-table";
 import type { DataTableFeatures } from "@/components/data-table/features";
-import { FilterBar, SearchField, SelectField } from "@/components/filters";
+import { FilterBar, optionsFailed, SearchField, SelectField } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
@@ -110,6 +110,7 @@ function ProductsPage() {
           allLabel="All categories"
           value={category ? String(category) : undefined}
           options={(categories.data ?? []).map((c) => ({ value: String(c.category_id), label: c.name }))}
+          failed={optionsFailed(categories, "Categories")}
           onChange={(value) => update({ category: value ? Number(value) : undefined })}
         />
       </FilterBar>

@@ -50,6 +50,10 @@ export function SearchField({ id, label, placeholder, value, onSearch }: SearchF
   );
 }
 
+/** The `failed` prop of a SelectField whose options come from `query`. */
+export const optionsFailed = (query: { isError: boolean; refetch: () => unknown }, what: string) =>
+  query.isError ? { what, onRetry: () => void query.refetch() } : undefined;
+
 interface SelectFieldProps {
   id: string;
   label: string;
@@ -57,23 +61,45 @@ interface SelectFieldProps {
   value: string | undefined;
   options: { value: string; label: string }[];
   onChange: (value: string | undefined) => void;
+  /** The options did not load: say so rather than offer a menu with only `allLabel`. */
+  failed?: { what: string; onRetry: () => void };
 }
 
-export function SelectField({ id, label, allLabel, value, options, onChange }: SelectFieldProps) {
+export function SelectField({ id, label, allLabel, value, options, onChange, failed }: SelectFieldProps) {
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-baseline justify-between gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        {failed ? (
+          <Button
+            variant="link"
+            size="xs"
+            className="h-auto p-0"
+            aria-label={`Try again: ${label}`}
+            onClick={failed.onRetry}
+          >
+            Try again
+          </Button>
+        ) : null}
+      </div>
       <NativeSelect
         id={id}
-        value={value ?? ""}
+        value={failed ? "" : (value ?? "")}
+        disabled={Boolean(failed)}
         onChange={(event) => onChange(event.target.value || undefined)}
       >
-        <NativeSelectOption value="">{allLabel}</NativeSelectOption>
-        {options.map((option) => (
-          <NativeSelectOption key={option.value} value={option.value}>
-            {option.label}
-          </NativeSelectOption>
-        ))}
+        {failed ? (
+          <NativeSelectOption value="">{failed.what} did not load</NativeSelectOption>
+        ) : (
+          <>
+            <NativeSelectOption value="">{allLabel}</NativeSelectOption>
+            {options.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {option.label}
+              </NativeSelectOption>
+            ))}
+          </>
+        )}
       </NativeSelect>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { DateField, FilterBar, SelectField } from "@/components/filters";
+import { DateField, FilterBar, optionsFailed, SelectField } from "@/components/filters";
 import { OrderList } from "@/components/order-list";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,7 @@ function OrdersPage() {
           options={(customers.data ?? [])
             .map((c) => ({ value: c.customer_id, label: c.company_name }))
             .sort((a, b) => a.label.localeCompare(b.label))}
+          failed={optionsFailed(customers, "Customers")}
           onChange={(value) => filter({ customer: value })}
         />
         <SelectField
@@ -63,6 +64,7 @@ function OrdersPage() {
             value: String(e.employee_id),
             label: `${e.first_name} ${e.last_name}`,
           }))}
+          failed={optionsFailed(employees, "Employees")}
           onChange={(value) => filter({ employee: value ? Number(value) : undefined })}
         />
         <SelectField
@@ -70,7 +72,8 @@ function OrdersPage() {
           label="Ship to country"
           allLabel="All countries"
           value={country}
-          options={countries}
+          options={countries.options}
+          failed={countries.failed}
           onChange={(value) => filter({ country: value })}
         />
         <DateField id="order-from" label="From" value={from} onChange={(value) => filter({ from: value })} />

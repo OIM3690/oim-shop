@@ -19,6 +19,7 @@ export function Account() {
       await navigate({ to: "/" });
       toast.success("Signed out");
     },
+    onError: () => toast.error("Signing out did not work. Try again."),
   });
 
   if (me.isPending) return null;

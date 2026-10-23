@@ -35,6 +35,14 @@ describe("signing in", () => {
     expect(screen.queryByText("You are not signed in.")).not.toBeInTheDocument();
   });
 
+  it("says so when signing out fails", async () => {
+    signInAs(3011, "Ana");
+    server.use(http.post("http://localhost:3000/api/auth/logout", () => new Response(null, { status: 500 })));
+    const { user } = renderApp("/products");
+    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    expect(await screen.findByText("Signing out did not work. Try again.")).toBeInTheDocument();
+  });
+
   it("asks a new rep to choose a name, then makes them a rep", async () => {
     signInAs(3001);
     const { user, location } = renderApp("/welcome");

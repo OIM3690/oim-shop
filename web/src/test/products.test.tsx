@@ -1,20 +1,10 @@
-import { screen, within } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { API, data } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
+import { recordRequests, rows } from "./helpers";
 import { renderApp } from "./render";
-
-const rows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
-
-function recordRequests(path: string) {
-  const urls: URL[] = [];
-  server.events.on("request:start", ({ request }) => {
-    const url = new URL(request.url);
-    if (url.pathname === `/shop${path}`) urls.push(url);
-  });
-  return urls;
-}
 
 describe("products", () => {
   it("opens on the products page", async () => {

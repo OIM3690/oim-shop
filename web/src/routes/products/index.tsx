@@ -35,7 +35,7 @@ const columns = column.columns([
       <Link
         to="/products/$productId"
         params={{ productId: String(row.original.product_id) }}
-        className="font-medium hover:underline"
+        className="text-primary font-medium hover:underline"
       >
         {row.original.name}
       </Link>

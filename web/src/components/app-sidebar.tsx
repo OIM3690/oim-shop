@@ -1,5 +1,5 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { Package } from "lucide-react";
+import { Building2, Package, ReceiptText, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -9,12 +9,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
-const sections = [{ to: "/products", label: "Products", icon: Package }] as const;
+const sections = [
+  { to: "/products", label: "Products", icon: Package },
+  { to: "/customers", label: "Customers", icon: Building2 },
+  { to: "/orders", label: "Orders", icon: ReceiptText },
+  { to: "/employees", label: "Employees", icon: Users },
+] as const;
 
 export function AppSidebar() {
   const matchRoute = useMatchRoute();
+  // On a phone the menu covers the page, so choosing a section closes it.
+  const { setOpenMobile } = useSidebar();
 
   return (
     <Sidebar>
@@ -30,7 +38,7 @@ export function AppSidebar() {
                 {sections.map(({ to, label, icon: Icon }) => (
                   <SidebarMenuItem key={to}>
                     <SidebarMenuButton asChild isActive={Boolean(matchRoute({ to, fuzzy: true }))}>
-                      <Link to={to}>
+                      <Link to={to} onClick={() => setOpenMobile(false)}>
                         <Icon aria-hidden="true" />
                         <span>{label}</span>
                       </Link>

@@ -22,3 +22,11 @@ describe("format", () => {
     expect(formatDate("2016-01-02")).toBe("Jan 2, 2016");
   });
 });
+
+describe("dayBefore", () => {
+  it("steps back across a month and a year", async () => {
+    const { dayBefore } = await import("./dates");
+    expect(dayBefore("2016-03-01")).toBe("2016-02-29");
+    expect(dayBefore("2017-01-01")).toBe("2016-12-31");
+  });
+});

@@ -29,6 +29,7 @@
   },
   "exports": {
     "./schemas": "./src/schemas.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./serve": "./src/serve.ts"
   }
 }

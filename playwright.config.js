@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// v1 is opened straight from disk. v2 is the built web app, served by
-// `vite preview` from a build that answers oim-api requests with MSW.
-const V2_URL = "http://localhost:4173/oim-shop/";
+// v1 is opened straight from disk. v3 is the real server (e2e/server.ts) on a
+// seeded copy of the database, serving the built web app.
+const V3_URL = "http://localhost:4173/";
 
 export default defineConfig({
   testDir: "e2e",
@@ -16,13 +16,13 @@ export default defineConfig({
   projects: [
     { name: "v1-desktop", testMatch: "v1.spec.js", use: { ...devices["Desktop Chrome"] } },
     { name: "v1-phone", testMatch: "v1.spec.js", use: { ...devices["Pixel 7"] } },
-    { name: "v2-desktop", testMatch: "v2.spec.js", use: { ...devices["Desktop Chrome"], baseURL: V2_URL } },
-    { name: "v2-phone", testMatch: "v2.spec.js", use: { ...devices["Pixel 7"], baseURL: V2_URL } },
+    { name: "v3-desktop", testMatch: "v3.spec.js", use: { ...devices["Desktop Chrome"], baseURL: V3_URL } },
+    { name: "v3-phone", testMatch: "v3.spec.js", use: { ...devices["Pixel 7"], baseURL: V3_URL } },
   ],
   webServer: {
-    command: "npm run e2e:serve --workspace web",
-    url: V2_URL,
+    command: "npm run build --workspace web && node e2e/server.ts",
+    url: `${V3_URL}api/health`,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
+    timeout: 240_000,
   },
 });

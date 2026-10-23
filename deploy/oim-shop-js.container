@@ -1,11 +1,15 @@
-# Quadlet unit for rootless podman: copy to ~/.config/containers/systemd/ on
-# the server, then `systemctl --user daemon-reload && systemctl --user start oim-shop-js`.
-# The published port and the memory and CPU limits live in a drop-in on the
-# server (oim-shop-js.container.d/local.conf), not in this public file, e.g.
-#   [Container]
-#   PublishPort=127.0.0.1:<port>:8787
-#   [Service]
-#   MemoryMax=<limit>
+# Quadlet unit for rootless podman: copy the three .container files to
+# ~/.config/containers/systemd/ and the two .timer files to
+# ~/.config/systemd/user/ on the server, then
+# `systemctl --user daemon-reload && systemctl --user start oim-shop-js`.
+#
+# The published port and the memory limits are set on the server, not in this
+# public file. Quadlet in podman 4.x does not read .container.d drop-ins, so:
+# - add `PublishPort=127.0.0.1:<port>:8787` under [Container] in the copy on
+#   the server;
+# - put `[Service]` and `MemoryMax=<limit>` in a systemd drop-in,
+#   ~/.config/systemd/user/oim-shop-js.service.d/local.conf (and the same for
+#   oim-shop-js-sync.service and oim-shop-js-reset.service).
 [Unit]
 Description=oim-shop, the Northwind sales system for OIM3690
 After=network-online.target

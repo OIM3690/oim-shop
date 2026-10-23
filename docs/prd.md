@@ -201,7 +201,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 - **Pending**: the live address. Proposed: `https://oim-shop-js.zhili.dev`.
 - `v2` stays on GitHub Pages at `https://oim3690.github.io/oim-shop/`, deployed from its tag. Its build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app there.
 - From `v3`, GitHub Actions builds the container image (`linux/amd64`), starts it once to check it, and pushes it to `ghcr.io/oim3690/oim-shop`; the server pulls it, and nothing is built there. The app applies its migrations when it starts, and seeds an empty database on its first start.
-- On the server, rootless podman runs the image from the Quadlet files in `deploy/`; sync and reset are one-shot containers started by systemd timers, so they hold memory only while they run. The published port and the memory and CPU limits live in a drop-in on the server.
+- On the server, rootless podman runs the image from the Quadlet files in `deploy/`; sync and reset are one-shot containers started by systemd timers, so they hold memory only while they run. The published port and the memory limits are set on the server, not in the repository.
 
 ## Open items
 

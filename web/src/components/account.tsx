@@ -4,6 +4,7 @@ import { LogOut, Plus } from "lucide-react";
 import { GitHubMark } from "@/components/github-mark";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 import { api, SIGN_IN_URL } from "@/lib/api";
 import { meQuery } from "@/lib/queries";
 
@@ -12,6 +13,9 @@ export function Account() {
   const me = useQuery(meQuery());
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  // On a phone the menu covers the page, so following a link closes it.
+  const { setOpenMobile } = useSidebar();
+  const close = () => setOpenMobile(false);
   const signOut = useMutation({
     mutationFn: api.signOut,
     onSuccess: async () => {
@@ -57,13 +61,14 @@ export function Account() {
             <Link
               to="/employees/$employeeId"
               params={{ employeeId: String(employee.employee_id) }}
+              onClick={close}
               className="font-medium hover:underline"
             >
               {employee.name}
             </Link>
           </p>
           <Button asChild className="w-full">
-            <Link to="/orders/new">
+            <Link to="/orders/new" onClick={close}>
               <Plus aria-hidden="true" />
               New order
             </Link>
@@ -71,7 +76,9 @@ export function Account() {
         </>
       ) : (
         <Button asChild className="w-full">
-          <Link to="/welcome">Choose your name</Link>
+          <Link to="/welcome" onClick={close}>
+            Choose your name
+          </Link>
         </Button>
       )}
       <Button

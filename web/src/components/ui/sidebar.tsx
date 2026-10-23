@@ -191,6 +191,14 @@ function Sidebar({
             } as React.CSSProperties
           }
           side={side}
+          // The sheet has no Radix trigger of its own, so Radix would drop
+          // focus on the page; hand it back to the button that opened it.
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            document
+              .querySelector<HTMLElement>('[data-sidebar="trigger"]')
+              ?.focus()
+          }}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>

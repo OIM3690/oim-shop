@@ -21,6 +21,9 @@ COPY api/src api/src
 COPY db db
 COPY data/seed data/seed
 COPY --from=build /app/web/dist web/dist
+# The database lives on a volume at /data, owned by the user the app runs as.
+RUN mkdir /data && chown node:node /data
+VOLUME /data
 USER node
 ENV DATABASE_PATH=/data/shop.db \
     WEB_DIST=/app/web/dist \

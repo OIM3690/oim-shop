@@ -115,7 +115,9 @@ function EmployeesPage() {
           <DataTable columns={columnsFor(employees.data)} data={employees.data} />
           <Card>
             <CardHeader>
-              <CardTitle>Reporting lines</CardTitle>
+              <CardTitle>
+                <h2>Reporting lines</h2>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ReportingList nodes={reportingTree(employees.data)} label="Reporting lines" />

@@ -22,9 +22,10 @@ function RootLayout() {
             <SidebarTrigger />
             <span className="font-semibold">Northwind Traders</span>
           </header>
-          <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+          {/* SidebarInset is the page's <main>; this only sets its width. */}
+          <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
             <Outlet />
-          </main>
+          </div>
           <footer className="text-muted-foreground mx-auto w-full max-w-6xl px-4 pb-8 text-xs md:px-8">
             <Link to="/privacy" className="hover:underline">
               Privacy
@@ -40,6 +41,7 @@ function RootLayout() {
 function NotFound() {
   return (
     <EmptyState
+      titleLevel={1}
       title="This page does not exist."
       description="Check the address, or start again from the product list."
       action={

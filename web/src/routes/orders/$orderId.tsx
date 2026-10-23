@@ -60,6 +60,7 @@ function OrderPage() {
   if (order.isError) {
     return (
       <ErrorState
+        titleLevel={1}
         error={order.error}
         what="This order"
         onRetry={() => void order.refetch()}

@@ -168,7 +168,9 @@ function LoadedOrderForm({
     <form onSubmit={form.handleSubmit((input) => save.mutate(input))} className="space-y-6" noValidate>
       <Card>
         <CardHeader>
-          <CardTitle>Customer and delivery</CardTitle>
+          <CardTitle>
+            <h2>Customer and delivery</h2>
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Controller
@@ -263,7 +265,9 @@ function LoadedOrderForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Products</CardTitle>
+          <CardTitle>
+            <h2>Products</h2>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {lines.fields.map((line, i) => {

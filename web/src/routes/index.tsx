@@ -81,12 +81,19 @@ function DashboardBody({ data, stale }: { data: Dashboard; stale: boolean }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Revenue by month</CardTitle>
+          <CardTitle>
+            <h2>Revenue by month</h2>
+          </CardTitle>
           <CardDescription>Line totals of the orders placed each month, before freight</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="aspect-auto h-72 w-full">
-            <BarChart data={data.revenue_by_month} margin={{ left: 8, right: 8 }} barCategoryGap={2}>
+            <BarChart
+              title="Revenue by month"
+              data={data.revenue_by_month}
+              margin={{ left: 8, right: 8 }}
+              barCategoryGap={2}
+            >
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="month"
@@ -219,7 +226,9 @@ function Ranking({ title, rows, note }: { title: string; rows: RankingRow[]; not
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle>
+          <h2>{title}</h2>
+        </CardTitle>
         {note ? <CardDescription>{note}</CardDescription> : null}
       </CardHeader>
       <CardContent>

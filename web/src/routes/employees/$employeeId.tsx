@@ -62,6 +62,7 @@ function EmployeePage() {
   if (employee.isError) {
     return (
       <ErrorState
+        titleLevel={1}
         error={employee.error}
         what="This employee"
         onRetry={() => void employee.refetch()}

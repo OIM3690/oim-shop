@@ -28,16 +28,21 @@ interface EmptyStateProps {
   title: string;
   description: string;
   action?: ReactNode;
+  /** Makes the title a heading, for a state that stands in for a whole page or section. */
+  titleLevel?: 1 | 2;
 }
 
-export function EmptyState({ title, description, action }: EmptyStateProps) {
+export function EmptyState({ title, description, action, titleLevel }: EmptyStateProps) {
+  const Heading = titleLevel ? (`h${titleLevel}` as const) : "span";
   return (
     <Empty className="border">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <SearchX aria-hidden="true" />
         </EmptyMedia>
-        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyTitle>
+          <Heading>{title}</Heading>
+        </EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
       {action ? <EmptyContent>{action}</EmptyContent> : null}
@@ -52,13 +57,16 @@ interface ErrorStateProps {
   onRetry: () => void;
   /** Shown instead of a retry when the API answers 404. */
   notFound?: { title: string; description: string; action: ReactNode };
+  /** Makes the title a heading, when this state is the whole page. */
+  titleLevel?: 1 | 2;
 }
 
-export function ErrorState({ error, what, onRetry, notFound }: ErrorStateProps) {
+export function ErrorState({ error, what, onRetry, notFound, titleLevel }: ErrorStateProps) {
+  const Heading = titleLevel ? (`h${titleLevel}` as const) : "span";
   const status = error instanceof ApiError ? error.status : undefined;
 
   if (status === 404 && notFound) {
-    return <EmptyState {...notFound} />;
+    return <EmptyState {...notFound} titleLevel={titleLevel} />;
   }
 
   const tooMany = status === 429;
@@ -68,7 +76,9 @@ export function ErrorState({ error, what, onRetry, notFound }: ErrorStateProps) 
         <EmptyMedia variant="icon">
           <AlertCircle aria-hidden="true" />
         </EmptyMedia>
-        <EmptyTitle>{tooMany ? "Too many requests for now." : `${what} did not load.`}</EmptyTitle>
+        <EmptyTitle>
+          <Heading>{tooMany ? "Too many requests for now." : `${what} did not load.`}</Heading>
+        </EmptyTitle>
         <EmptyDescription>
           {tooMany
             ? "The API limits how often one network can ask. Wait a minute, then try again."

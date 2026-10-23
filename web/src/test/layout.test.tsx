@@ -30,3 +30,34 @@ describe("the menu on a phone", () => {
     expect(toggle).toHaveFocus();
   });
 });
+
+describe("landmarks and headings", () => {
+  it("has one main landmark", async () => {
+    renderApp("/products");
+    await screen.findByRole("heading", { name: "Products", level: 1 });
+    expect(screen.getAllByRole("main")).toHaveLength(1);
+  });
+
+  it("titles a page that does not exist with a level-one heading", async () => {
+    renderApp("/no-such-page");
+    expect(
+      await screen.findByRole("heading", { name: "This page does not exist.", level: 1 }),
+    ).toBeInTheDocument();
+  });
+
+  it("titles a record that does not exist with a level-one heading", async () => {
+    renderApp("/customers/NOPE");
+    expect(
+      await screen.findByRole("heading", { name: "There is no customer NOPE.", level: 1 }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("section headings", () => {
+  it("makes each dashboard section a level-two heading", async () => {
+    renderApp("/");
+    for (const name of ["Revenue by month", "Top products", "Sales by employee", "Sales by country"]) {
+      expect(await screen.findByRole("heading", { name, level: 2 })).toBeInTheDocument();
+    }
+  });
+});

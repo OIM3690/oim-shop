@@ -25,6 +25,7 @@ function CustomerPage() {
   if (customer.isError) {
     return (
       <ErrorState
+        titleLevel={1}
         error={customer.error}
         what="This customer"
         onRetry={() => void customer.refetch()}

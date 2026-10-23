@@ -22,6 +22,7 @@ function ProductPage() {
   if (product.isError) {
     return (
       <ErrorState
+        titleLevel={1}
         error={product.error}
         what="This product"
         onRetry={() => void product.refetch()}

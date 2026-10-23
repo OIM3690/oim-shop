@@ -15,13 +15,13 @@ export function Pager({ pagination, onPage }: PagerProps) {
   const last = Math.min(page * per_page, total);
 
   return (
-    <nav aria-label="Pages" className="flex items-center justify-between gap-4 text-sm">
-      <p className="text-muted-foreground tabular-nums">
+    <nav aria-label="Pages" className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+      <p className="text-muted-foreground whitespace-nowrap tabular-nums">
         {formatCount(first)}–{formatCount(last)} of {formatCount(total)}
       </p>
       {pages > 1 ? (
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground tabular-nums">
+          <span className="text-muted-foreground whitespace-nowrap tabular-nums">
             Page {formatCount(page)} of {formatCount(pages)}
           </span>
           <Button variant="outline" size="sm" disabled={!has_prev} onClick={() => onPage(page - 1)}>

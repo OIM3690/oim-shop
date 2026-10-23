@@ -24,10 +24,12 @@ declare module "@tanstack/table-core" {
     TValue extends CellData = CellData,
   > {
     sort?: SortSpec;
+    /** Lets long text, such as a company name, wrap instead of widening the table. */
+    wrap?: boolean;
   }
 }
 
 /** Column meta for a sortable column; a number sits on the right and sorts largest first. */
-export const sortable = (field: string, numeric = false): { sort: SortSpec } => ({
+export const sortable = (field: string, numeric = false): { sort: SortSpec; wrap?: boolean } => ({
   sort: { field, align: numeric ? "right" : "left", firstDirection: numeric ? "desc" : "asc" },
 });

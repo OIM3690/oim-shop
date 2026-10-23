@@ -34,7 +34,7 @@ const column = createColumnHelper<DataTableFeatures, Customer>();
 const columns = column.columns([
   column.accessor("company_name", {
     header: "Company",
-    meta: sortable("company_name"),
+    meta: { ...sortable("company_name"), wrap: true },
     cell: ({ row }) => (
       <Link
         to="/customers/$customerId"
@@ -45,7 +45,7 @@ const columns = column.columns([
       </Link>
     ),
   }),
-  column.accessor("contact_name", { header: "Contact" }),
+  column.accessor("contact_name", { header: "Contact", meta: { wrap: true } }),
   column.accessor("city", { header: "City", cell: ({ getValue }) => getValue() ?? notRecorded }),
   column.accessor("country", {
     header: "Country",

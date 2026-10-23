@@ -24,6 +24,7 @@ const right = (text: string) => <div className="text-right">{text}</div>;
 const lineColumns = column.columns([
   column.accessor("product_name", {
     header: "Product",
+    meta: { wrap: true },
     cell: ({ row }) => (
       <Link
         to="/products/$productId"

@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/query-states";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Dashboard } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
 import { formatMonth, formatMonthTick, isReversed, monthTicks } from "@/lib/months";
@@ -135,24 +136,26 @@ function DashboardBody({ data, stale }: { data: Dashboard; stale: boolean }) {
           </ChartContainer>
           <details className="mt-4 text-sm">
             <summary className="text-muted-foreground cursor-pointer">Show the figures as a table</summary>
-            <table className="mt-2 w-full max-w-md">
-              <thead>
-                <tr className="text-muted-foreground text-left">
-                  <th className="py-1 font-medium">Month</th>
-                  <th className="py-1 text-right font-medium">Orders</th>
-                  <th className="py-1 text-right font-medium">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="mt-2 max-w-md">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Month</TableHead>
+                  <TableHead className="text-right">Orders</TableHead>
+                  <TableHead className="text-right">Revenue</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {data.revenue_by_month.map((m) => (
-                  <tr key={m.month} className="border-t">
-                    <td className="py-1">{formatMonth(m.month)}</td>
-                    <td className="py-1 text-right tabular-nums">{formatCount(m.order_count)}</td>
-                    <td className="py-1 text-right tabular-nums">{formatMoney(m.revenue_dollars)}</td>
-                  </tr>
+                  <TableRow key={m.month}>
+                    <TableCell>{formatMonth(m.month)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCount(m.order_count)}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatMoney(m.revenue_dollars)}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </details>
         </CardContent>
       </Card>
@@ -245,7 +248,7 @@ function Ranking({ title, rows, note }: { title: string; rows: RankingRow[]; not
             <tbody>
               {rows.map((row) => (
                 <tr key={row.key} className="align-top">
-                  <th scope="row" className="py-1.5 pr-3 text-left font-normal">
+                  <th scope="row" className="py-1.5 pr-3 text-left font-normal wrap-anywhere">
                     <span className="font-medium">{row.label}</span>
                     <span className="text-muted-foreground block text-xs">{row.detail}</span>
                     <span className="bg-muted mt-1 block h-1.5 rounded-full" aria-hidden="true">

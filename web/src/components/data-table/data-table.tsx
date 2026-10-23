@@ -57,7 +57,10 @@ export function DataTable<TData extends RowData>({
           {table.getRowModel().rows.map((row) => (
             <TableRow key={row.id}>
               {row.getAllCells().map((cell) => (
-                <TableCell key={cell.id}>
+                <TableCell
+                  key={cell.id}
+                  className={cell.column.columnDef.meta?.wrap ? "min-w-40 whitespace-normal" : undefined}
+                >
                   <table.FlexRender cell={cell} />
                 </TableCell>
               ))}

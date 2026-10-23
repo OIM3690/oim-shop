@@ -28,6 +28,7 @@ const dateColumn = column.accessor("order_date", {
 
 const customerColumn = column.accessor("customer_name", {
   header: "Customer",
+  meta: { wrap: true },
   cell: ({ row }) => (
     <Link
       to="/customers/$customerId"
@@ -41,6 +42,7 @@ const customerColumn = column.accessor("customer_name", {
 
 const employeeColumn = column.accessor("employee_name", {
   header: "Employee",
+  meta: { wrap: true },
   cell: ({ row }) => (
     <Link
       to="/employees/$employeeId"
@@ -55,6 +57,7 @@ const employeeColumn = column.accessor("employee_name", {
 const shipToColumn = column.display({
   id: "ship-to",
   header: "Ship to",
+  meta: { wrap: true },
   cell: ({ row }) =>
     [row.original.ship_city, row.original.ship_country].filter(Boolean).join(", ") || "Not recorded",
 });

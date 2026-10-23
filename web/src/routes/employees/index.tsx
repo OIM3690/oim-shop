@@ -40,7 +40,7 @@ const columns = column.columns([
   column.display({
     id: "name",
     header: "Name",
-    meta: sortable("name"),
+    meta: { ...sortable("name"), wrap: true },
     cell: ({ row }) => (
       <span className="inline-flex items-center gap-2">
         <span className="text-primary font-medium">
@@ -50,7 +50,7 @@ const columns = column.columns([
       </span>
     ),
   }),
-  column.accessor("title", { header: "Title" }),
+  column.accessor("title", { header: "Title", meta: { wrap: true } }),
   column.display({
     id: "reports-to",
     header: "Reports to",
@@ -92,7 +92,7 @@ function ReportingList({ nodes, label }: { nodes: ReportingNode[]; label?: strin
   return (
     <ul aria-label={label} className={label ? "space-y-2" : "mt-2 space-y-2 border-l pl-4"}>
       {nodes.map(({ employee, reports }) => (
-        <li key={employee.employee_id}>
+        <li key={employee.employee_id} className="wrap-anywhere">
           <p>
             <EmployeeLink id={employee.employee_id} name={employee.name} />
             <span className="text-muted-foreground text-sm">, {employee.title}</span>

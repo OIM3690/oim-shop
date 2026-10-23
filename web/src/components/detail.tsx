@@ -25,7 +25,7 @@ export function DetailCard({ items }: { items: { label: string; value: ReactNode
           {items.map(({ label, value }) => (
             <div key={label} className="grid gap-1">
               <dt className="text-muted-foreground text-sm">{label}</dt>
-              <dd className="tabular-nums">{value}</dd>
+              <dd className="tabular-nums wrap-anywhere">{value}</dd>
             </div>
           ))}
         </dl>

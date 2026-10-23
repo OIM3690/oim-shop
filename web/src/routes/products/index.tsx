@@ -33,7 +33,7 @@ const column = createColumnHelper<DataTableFeatures, Product>();
 const columns = column.columns([
   column.accessor("name", {
     header: "Product",
-    meta: sortable("name"),
+    meta: { ...sortable("name"), wrap: true },
     cell: ({ row }) => (
       <Link
         to="/products/$productId"

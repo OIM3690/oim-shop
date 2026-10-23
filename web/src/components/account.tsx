@@ -62,7 +62,7 @@ export function Account() {
               to="/employees/$employeeId"
               params={{ employeeId: String(employee.employee_id) }}
               onClick={close}
-              className="font-medium hover:underline"
+              className="font-medium wrap-anywhere hover:underline"
             >
               {employee.name}
             </Link>

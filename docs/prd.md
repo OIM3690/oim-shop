@@ -1,6 +1,6 @@
 # oim-shop Product Requirements
 
-Status: agreed on 2026-10-22; `v1` and `v2` are released, `v3` is built and not yet deployed. Anything marked **Pending** is a proposal I have not decided yet.
+Status: agreed on 2026-10-22; `v1`, `v2` and `v3` are released. Anything marked **Pending** is a proposal I have not decided yet.
 
 ## Purpose
 
@@ -198,13 +198,12 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 
 ## Deployment
 
-- **Pending**: the live address. Proposed: `https://oim-shop-js.zhili.dev`.
+- `v3` is live at `https://oim-shop-js.zhili.dev`. Cloudflare sits in front of it, and the server accepts connections from Cloudflare only, so rate limits count each visitor's own address.
+- Sign-in on the live site uses a GitHub OAuth App owned by the `OIM3690` organization. Running the app on your own machine needs an App of your own, as the README explains.
 - `v2` stays on GitHub Pages at `https://oim3690.github.io/oim-shop/`, deployed from its tag. Its build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app there.
 - From `v3`, GitHub Actions builds the container image (`linux/amd64`), starts it once to check it, and pushes it to `ghcr.io/oim3690/oim-shop`; the server pulls it, and nothing is built there. The app applies its migrations when it starts, and seeds an empty database on its first start.
-- On the server, rootless podman runs the image from the Quadlet files in `deploy/`; sync and reset are one-shot containers started by systemd timers, so they hold memory only while they run. The published port and the memory limits are set on the server, not in the repository.
+- On the server, rootless podman runs the image from the Quadlet files in `deploy/`; sync and reset are one-shot containers started by systemd timers, so they hold memory only while they run. The published port and the memory limits are set on the server and kept out of the repository.
 
 ## Open items
 
-- The live address for `v3`, its DNS record and its Caddy block.
-- The GitHub OAuth Apps for local development and production, and their callback URLs.
-- Measuring the container's memory on the server after the first deploy.
+- None at the `v3` release.

@@ -10,10 +10,11 @@ The product grows in tagged versions on one history. Open the version that match
 | --- | --- | --- | --- |
 | `v1` | One HTML file that calls a public API with `fetch` | [`/tree/v1`](https://github.com/OIM3690/oim-shop/tree/v1) | |
 | `v2` | A React and TypeScript interface for products, customers, orders and employees, still reading the API directly | [`/tree/v2`](https://github.com/OIM3690/oim-shop/tree/v2) | [`v1...v2`](https://github.com/OIM3690/oim-shop/compare/v1...v2) |
+| `v3` | Its own server and SQLite database, a sales dashboard, GitHub sign-in and order entry | [`/tree/v3`](https://github.com/OIM3690/oim-shop/tree/v3) | [`v2...v3`](https://github.com/OIM3690/oim-shop/compare/v2...v3) |
 
-`v3` (its own server and database, a dashboard, sign-in and order entry) will be added to this table when it is released. The plan for all versions is in [`docs/prd.md`](docs/prd.md).
+The plan for all versions is in [`docs/prd.md`](docs/prd.md).
 
-The live copy of `v2` is at <https://oim3690.github.io/oim-shop/>.
+The live copy of `v3` is at <https://oim-shop-js.zhili.dev/>, and `v2` stays at <https://oim3690.github.io/oim-shop/>. Orders that signed-in visitors enter on the live site are removed every night.
 
 ## Run v1
 

@@ -175,7 +175,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 
 ## Security and privacy
 
-- Reading is public and needs no sign-in. In `v1` and `v2` every request goes to `oim-api`, which applies its own limits. From `v3`, protection against bots comes from caching and limits: anonymous GET responses are cached at the edge for a few minutes, `per_page` is capped, unbounded queries are refused, each client address has a rate limit, and `robots.txt` asks crawlers to stay out of the API.
+- Reading is public and needs no sign-in. In `v1` and `v2` every request goes to `oim-api`, which applies its own limits. From `v3`, protection against bots comes from caching and limits: anonymous GET responses are cached at the edge for a minute, `per_page` is capped, unbounded queries are refused, each client address has a rate limit, and `robots.txt` asks crawlers to stay out of the API.
 - A request that carries a session cookie skips the cache, and every response that depends on who is signed in is sent with `Cache-Control: private, no-store`. A rep therefore sees a new order at once; a visitor sees it when the cached copy expires.
 - Sign-in is used only for writing. It goes through a GitHub OAuth App that requests no scopes. The app stores the GitHub user ID and the display name you choose. It never stores your email, and no page shows your GitHub username.
 - The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`; every write checks the request's origin; writes have a rate limit per user and length limits on every text field.

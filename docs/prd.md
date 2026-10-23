@@ -1,6 +1,6 @@
 # oim-shop Product Requirements
 
-Status: draft for review, 2026-10-22. Anything marked **Pending** is a proposal I have not decided yet.
+Status: agreed on 2026-10-22; `v1` and `v2` are released. Anything marked **Pending** is a proposal I have not decided yet.
 
 ## Purpose
 

@@ -6,7 +6,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { sortable, type DataTableFeatures } from "@/components/data-table/features";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
-import { ErrorState, LoadingRows } from "@/components/query-states";
+import { ErrorState, LoadingRows, PastTheEnd } from "@/components/query-states";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Employee } from "@/lib/api";
@@ -134,6 +134,8 @@ function EmployeesPage() {
   const { sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
   const employees = useQuery(employeesQuery({ sort, page }));
+  const goTo = (next: number) =>
+    void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) });
 
   return (
     <>
@@ -146,6 +148,8 @@ function EmployeesPage() {
           what="The employee list"
           onRetry={() => void employees.refetch()}
         />
+      ) : employees.data.items.length === 0 ? (
+        <PastTheEnd page={page} onPage={goTo} />
       ) : (
         <>
           <DataTable
@@ -154,12 +158,7 @@ function EmployeesPage() {
             stale={employees.isPlaceholderData}
             sorting={{ sort, onSort: (next) => void navigate({ search: cleanSearch({ sort: next }) }) }}
           />
-          <Pager
-            pagination={employees.data.pagination}
-            onPage={(next) =>
-              void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) })
-            }
-          />
+          <Pager pagination={employees.data.pagination} onPage={goTo} />
         </>
       )}
       <ReportingLines />

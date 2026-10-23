@@ -6,7 +6,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { ORDER_DEFAULT_SORT, orderColumns } from "@/components/order-columns";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
+import { EmptyState, ErrorState, LoadingRows, PastTheEnd } from "@/components/query-states";
 import { RepGate } from "@/components/rep-gate";
 import { Button } from "@/components/ui/button";
 import { myOrdersQuery } from "@/lib/queries";
@@ -50,8 +50,14 @@ function MyOrderList() {
   if (orders.isError) {
     return <ErrorState error={orders.error} what="Your order list" onRetry={() => void orders.refetch()} />;
   }
+  const goTo = (next: number) =>
+    void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) });
   if (orders.data.items.length === 0) {
-    return <EmptyState title="You have not entered an order yet." description="Start with New order." />;
+    return orders.data.pagination.total > 0 ? (
+      <PastTheEnd page={page} onPage={goTo} />
+    ) : (
+      <EmptyState title="You have not entered an order yet." description="Start with New order." />
+    );
   }
   return (
     <>
@@ -65,10 +71,7 @@ function MyOrderList() {
           defaultSort: ORDER_DEFAULT_SORT,
         }}
       />
-      <Pager
-        pagination={orders.data.pagination}
-        onPage={(next) => void navigate({ search: cleanSearch({ sort, page: next > 1 ? next : undefined }) })}
-      />
+      <Pager pagination={orders.data.pagination} onPage={goTo} />
     </>
   );
 }

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import { ORDER_DEFAULT_SORT, orderColumns } from "@/components/order-columns";
 import { Pager } from "@/components/pager";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
+import { EmptyState, ErrorState, LoadingRows, PastTheEnd } from "@/components/query-states";
 import type { TableSorting } from "@/lib/sorting";
 import type { OrderQuery } from "@/lib/api";
 import { ordersQuery } from "@/lib/queries";
@@ -24,7 +24,13 @@ export function OrderList({ query, leaveOut, onPage, sorting, empty }: OrderList
   if (orders.isError) {
     return <ErrorState error={orders.error} what="The order list" onRetry={() => void orders.refetch()} />;
   }
-  if (orders.data.items.length === 0) return <EmptyState {...empty} />;
+  if (orders.data.items.length === 0) {
+    return orders.data.pagination.total > 0 ? (
+      <PastTheEnd page={orders.data.pagination.page} onPage={onPage} />
+    ) : (
+      <EmptyState {...empty} />
+    );
+  }
 
   return (
     <>

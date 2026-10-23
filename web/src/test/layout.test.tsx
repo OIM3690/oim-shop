@@ -61,3 +61,16 @@ describe("section headings", () => {
     }
   });
 });
+
+describe("a page number past the end", () => {
+  it.each([
+    ["/products?page=99", "1–25 of 77"],
+    ["/customers/ALFKI?page=99", /^1–\d+ of \d+$/],
+    ["/employees?page=99", "1–9 of 9"],
+  ])("%s says so and offers page 1", async (path, firstPage) => {
+    const { user } = renderApp(path);
+    expect(await screen.findByText("Page 99 is past the end of this list.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Go to page 1" }));
+    expect(await screen.findByText(firstPage)).toBeInTheDocument();
+  });
+});

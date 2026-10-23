@@ -7,7 +7,7 @@ import { sortable, type DataTableFeatures } from "@/components/data-table/featur
 import { FilterBar, SearchField, SelectField } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
+import { EmptyState, ErrorState, LoadingRows, PastTheEnd } from "@/components/query-states";
 import { Button } from "@/components/ui/button";
 import type { Customer } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
@@ -70,6 +70,8 @@ function CustomersPage() {
   const customers = useQuery(customersQuery({ name, country, sort, page }));
   const countries = useCountries();
 
+  const goTo = (next: number) =>
+    void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) });
   // Any change to the filters or the order starts again at page 1.
   const filter = (next: { name?: string; country?: string; sort?: string }) =>
     navigate({ search: (prev) => cleanSearch({ ...prev, ...next, page: undefined }) });
@@ -104,6 +106,8 @@ function CustomersPage() {
           what="The customer list"
           onRetry={() => void customers.refetch()}
         />
+      ) : customers.data.items.length === 0 && customers.data.pagination.total > 0 ? (
+        <PastTheEnd page={page} onPage={goTo} />
       ) : customers.data.items.length === 0 ? (
         <EmptyState
           title={`No customers${name ? ` matching “${name}”` : ""}${country ? ` in ${country}` : ""}.`}
@@ -118,12 +122,7 @@ function CustomersPage() {
             stale={customers.isPlaceholderData}
             sorting={{ sort, onSort: (next) => void filter({ sort: next }) }}
           />
-          <Pager
-            pagination={customers.data.pagination}
-            onPage={(next) =>
-              void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) })
-            }
-          />
+          <Pager pagination={customers.data.pagination} onPage={goTo} />
         </>
       )}
     </>

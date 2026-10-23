@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api";
+import { formatCount } from "@/lib/format";
 
 export function LoadingRows({ rows = 8, label }: { rows?: number; label: string }) {
   return (
@@ -65,6 +66,20 @@ export function LoadFailed({ what, onRetry }: { what: string; onRetry: () => voi
         Try again
       </Button>
     </span>
+  );
+}
+
+/**
+ * A page number beyond the last page, as from an old link or a list that has
+ * shrunk. The list itself is not empty, so this says so and offers page 1.
+ */
+export function PastTheEnd({ page, onPage }: { page: number; onPage: (page: number) => void }) {
+  return (
+    <EmptyState
+      title={`Page ${formatCount(page)} is past the end of this list.`}
+      description="The list has fewer pages now. Start again from the first one."
+      action={<Button onClick={() => onPage(1)}>Go to page 1</Button>}
+    />
   );
 }
 

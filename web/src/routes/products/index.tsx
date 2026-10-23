@@ -7,7 +7,7 @@ import { sortable, type DataTableFeatures } from "@/components/data-table/featur
 import { FilterBar, SearchField, SelectField } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { Pager } from "@/components/pager";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
+import { EmptyState, ErrorState, LoadingRows, PastTheEnd } from "@/components/query-states";
 import { StockLabel } from "@/components/status-badges";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/api";
@@ -73,6 +73,8 @@ function ProductsPage() {
   const products = useQuery(productsQuery({ name, category, sort, page }));
   const categories = useQuery(categoriesQuery());
 
+  const goTo = (next: number) =>
+    void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) });
   // Any change to the filters or the order starts again at page 1.
   const update = (next: { name?: string; category?: number; sort?: string }) =>
     navigate({ search: (prev) => cleanSearch({ ...prev, ...next, page: undefined }) });
@@ -104,6 +106,8 @@ function ProductsPage() {
         <LoadingRows label="Loading products" />
       ) : products.isError ? (
         <ErrorState error={products.error} what="The product list" onRetry={() => void products.refetch()} />
+      ) : products.data.items.length === 0 && products.data.pagination.total > 0 ? (
+        <PastTheEnd page={page} onPage={goTo} />
       ) : products.data.items.length === 0 ? (
         <EmptyState
           title={`No products${name ? ` matching “${name}”` : ""}${categoryName ? ` in ${categoryName}` : ""}.`}
@@ -118,12 +122,7 @@ function ProductsPage() {
             stale={products.isPlaceholderData}
             sorting={{ sort, onSort: (next) => void update({ sort: next }) }}
           />
-          <Pager
-            pagination={products.data.pagination}
-            onPage={(next) =>
-              void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) })
-            }
-          />
+          <Pager pagination={products.data.pagination} onPage={goTo} />
         </>
       )}
     </>

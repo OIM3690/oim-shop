@@ -180,6 +180,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 - Sign-in is used only for writing. It goes through a GitHub OAuth App that requests no scopes. The app stores the GitHub user ID and the display name you choose. It never stores your email, and no page shows your GitHub username.
 - The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`; every write checks the request's origin; writes have a rate limit per user and length limits on every text field.
 - Secrets live in `.env` on your machine and in the server's environment file in production. The repository has `.env.example` only. Development and production use separate OAuth apps.
+- From `v3.1` the server writes an access log: method, path, status and time for each request, with no query string and no client address.
 - `SECURITY.md` explains how to report a vulnerability.
 
 ## Engineering practice

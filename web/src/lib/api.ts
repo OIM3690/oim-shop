@@ -1,136 +1,86 @@
-// Every call to oim-api goes through this file. Each response is checked
-// against a zod schema, and the TypeScript types come from the same schemas,
-// so the shape of the data is written down exactly once.
+// Every call to the app's API goes through this file. The response schemas
+// come from the server itself (api/src/schemas.ts), so the types the pages
+// use are the shapes the server promises, and each response is checked
+// against them when it arrives.
+import * as schemas from "api/schemas";
 import { z } from "zod";
 
-export const API_BASE = "https://oim.zhili.dev/shop";
+export type {
+  Category,
+  Customer,
+  Dashboard,
+  Employee,
+  Me,
+  Order,
+  OrderLine,
+  OrderSummary,
+  Pagination,
+  Product,
+  Shipper,
+} from "api/schemas";
+
+export const API_BASE = "/api";
 export const PER_PAGE = 25;
 
-const pagination = z.object({
-  page: z.number(),
-  per_page: z.number(),
-  total: z.number(),
-  pages: z.number(),
-  has_next: z.boolean(),
-  has_prev: z.boolean(),
+const refusal = z.object({
+  detail: z.union([z.string(), z.array(z.string())]),
+  issues: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
 });
 
-const pageOf = <T extends z.ZodType>(item: T) => z.object({ items: z.array(item), pagination });
-
-const category = z.object({
-  category_id: z.number(),
-  name: z.string(),
-  description: z.string(),
-});
-
-const product = z.object({
-  product_id: z.number(),
-  name: z.string(),
-  category: z.string(),
-  supplier: z.string(),
-  quantity_per_unit: z.string(),
-  unit_price_dollars: z.number(),
-  units_in_stock: z.number(),
-  discontinued: z.boolean(),
-});
-
-const customer = z.object({
-  customer_id: z.string(),
-  company_name: z.string(),
-  contact_name: z.string(),
-  // Two customers in the source data have no city or country.
-  city: z.string().nullable(),
-  country: z.string().nullable(),
-});
-
-const employee = z.object({
-  employee_id: z.number(),
-  first_name: z.string(),
-  last_name: z.string(),
-  title: z.string(),
-  reports_to: z.number().nullable(),
-  hire_date: z.string(),
-  city: z.string(),
-  country: z.string(),
-});
-
-const orderSummary = z.object({
-  order_id: z.number(),
-  customer_id: z.string(),
-  customer_name: z.string(),
-  order_date: z.string(),
-  required_date: z.string(),
-  shipped_date: z.string().nullable(),
-  shipper: z.string(),
-  ship_city: z.string(),
-  ship_country: z.string(),
-  freight_dollars: z.number(),
-  line_count: z.number(),
-  order_total_dollars: z.number(),
-  employee_id: z.number(),
-  employee_name: z.string(),
-});
-
-const orderLine = z.object({
-  product_id: z.number(),
-  product_name: z.string(),
-  unit_price_dollars: z.number(),
-  quantity: z.number(),
-  discount_fraction: z.number(),
-  line_total_dollars: z.number(),
-});
-
-const order = orderSummary.extend({ lines: z.array(orderLine) });
-
-export type Category = z.infer<typeof category>;
-export type Product = z.infer<typeof product>;
-export type Customer = z.infer<typeof customer>;
-export type Employee = z.infer<typeof employee>;
-export type OrderSummary = z.infer<typeof orderSummary>;
-export type Order = z.infer<typeof order>;
-export type Pagination = z.infer<typeof pagination>;
-
-/** The API answered, but with an error status such as 404 or 429. */
+/** The API answered with an error status, such as 404, 422 or 429. */
 export class ApiError extends Error {
   readonly status: number;
+  /** Problems the server found with what was sent, by field, as in "lines.0.quantity". */
+  readonly issues: { path: string; message: string }[];
 
-  constructor(status: number) {
-    super(`oim-api answered ${status}`);
+  constructor(status: number, detail: string, issues: { path: string; message: string }[] = []) {
+    super(detail);
     this.name = "ApiError";
     this.status = status;
+    this.issues = issues;
   }
 }
 
 type Params = Record<string, string | number | undefined>;
 
-async function get<T extends z.ZodType>(
+async function request<T extends z.ZodType>(
   path: string,
   schema: T,
-  params: Params = {},
-  signal?: AbortSignal,
+  init: { params?: Params; method?: string; body?: unknown; signal?: AbortSignal } = {},
 ): Promise<z.infer<T>> {
-  const url = new URL(API_BASE + path);
-  for (const [key, value] of Object.entries(params)) {
+  const url = new URL(API_BASE + path, window.location.origin);
+  for (const [key, value] of Object.entries(init.params ?? {})) {
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   }
-  const response = await fetch(url, { signal });
-  if (!response.ok) throw new ApiError(response.status);
+  const response = await fetch(url, {
+    method: init.method ?? "GET",
+    signal: init.signal,
+    headers: init.body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  });
+  if (!response.ok) {
+    const parsed = refusal.safeParse(await response.json().catch(() => ({})));
+    const detail = parsed.success
+      ? [parsed.data.detail].flat().join(" ")
+      : `The API answered ${response.status}`;
+    throw new ApiError(response.status, detail, parsed.success ? (parsed.data.issues ?? []) : []);
+  }
+  if (response.status === 204) return schema.parse(undefined);
   return schema.parse(await response.json());
 }
 
-export interface ProductQuery {
+export type SortQuery = { sort?: string };
+export interface ProductQuery extends SortQuery {
   name?: string;
-  category?: string;
+  category?: number;
   page: number;
 }
-
-export interface CustomerQuery {
+export interface CustomerQuery extends SortQuery {
   name?: string;
   country?: string;
   page: number;
 }
-
-export interface OrderQuery {
+export interface OrderQuery extends SortQuery {
   customer_id?: string;
   employee_id?: number;
   country?: string;
@@ -140,30 +90,73 @@ export interface OrderQuery {
   per_page?: number;
 }
 
+export interface OrderInput {
+  customer_id: string;
+  shipper_id: number;
+  required_date: string;
+  freight: number;
+  lines: { product_id: number; quantity: number; discount: number }[];
+}
+
+const nothing = z.undefined();
+
 export const api = {
-  categories: (signal?: AbortSignal) => get("/categories", z.array(category), {}, signal),
+  categories: (signal?: AbortSignal) => request("/categories", z.array(schemas.category), { signal }),
+  shippers: (signal?: AbortSignal) => request("/shippers", z.array(schemas.shipper), { signal }),
 
   products: (query: ProductQuery, signal?: AbortSignal) =>
-    get("/products", pageOf(product), { ...query, per_page: PER_PAGE }, signal),
-
-  product: (id: number, signal?: AbortSignal) => get(`/products/${id}`, product, {}, signal),
+    request("/products", schemas.pageOf(schemas.product), {
+      params: { ...query, per_page: PER_PAGE },
+      signal,
+    }),
+  /** All 77 products at once, for the order form. */
+  allProducts: (signal?: AbortSignal) =>
+    request("/products", schemas.pageOf(schemas.product), {
+      params: { per_page: 100, sort: "name" },
+      signal,
+    }).then((page) => page.items),
+  product: (id: number, signal?: AbortSignal) => request(`/products/${id}`, schemas.product, { signal }),
 
   customers: (query: CustomerQuery, signal?: AbortSignal) =>
-    get("/customers", pageOf(customer), { ...query, per_page: PER_PAGE }, signal),
-
-  /** All 93 customers at once, for the filter menus. */
+    request("/customers", schemas.pageOf(schemas.customer), {
+      params: { ...query, per_page: PER_PAGE },
+      signal,
+    }),
+  /** All 93 customers at once, for the filter menus and the order form. */
   allCustomers: (signal?: AbortSignal) =>
-    get("/customers", pageOf(customer), { per_page: 100 }, signal).then((page) => page.items),
-
+    request("/customers", schemas.pageOf(schemas.customer), {
+      params: { per_page: 100, sort: "company_name" },
+      signal,
+    }).then((page) => page.items),
   customer: (id: string, signal?: AbortSignal) =>
-    get(`/customers/${encodeURIComponent(id)}`, customer, {}, signal),
+    request(`/customers/${encodeURIComponent(id)}`, schemas.customer, { signal }),
 
-  employees: (signal?: AbortSignal) => get("/employees", z.array(employee), {}, signal),
-
-  employee: (id: number, signal?: AbortSignal) => get(`/employees/${id}`, employee, {}, signal),
+  employees: (signal?: AbortSignal) => request("/employees", z.array(schemas.employee), { signal }),
+  employee: (id: number, signal?: AbortSignal) => request(`/employees/${id}`, schemas.employee, { signal }),
 
   orders: (query: OrderQuery, signal?: AbortSignal) =>
-    get("/orders", pageOf(orderSummary), { per_page: PER_PAGE, ...query }, signal),
+    request("/orders", schemas.pageOf(schemas.orderSummary), {
+      params: { per_page: PER_PAGE, ...query },
+      signal,
+    }),
+  order: (id: number, signal?: AbortSignal) => request(`/orders/${id}`, schemas.order, { signal }),
 
-  order: (id: number, signal?: AbortSignal) => get(`/orders/${id}`, order, {}, signal),
+  dashboard: (range: { from?: string; to?: string }, signal?: AbortSignal) =>
+    request("/dashboard", schemas.dashboard, { params: range, signal }),
+
+  me: (signal?: AbortSignal) => request("/me", schemas.me, { signal }),
+  setDisplayName: (display_name: string) =>
+    request("/me", schemas.me, { method: "PUT", body: { display_name } }),
+  signOut: () => request("/auth/logout", nothing, { method: "POST" }),
+  myOrders: (page: number, signal?: AbortSignal) =>
+    request("/me/orders", schemas.pageOf(schemas.orderSummary), { params: { page }, signal }),
+
+  placeOrder: (input: OrderInput) => request("/orders", schemas.order, { method: "POST", body: input }),
+  editOrder: (id: number, input: OrderInput) =>
+    request(`/orders/${id}`, schemas.order, { method: "PUT", body: input }),
+  cancelOrder: (id: number) => request(`/orders/${id}/cancel`, nothing, { method: "POST" }),
+  shipOrder: (id: number) => request(`/orders/${id}/ship`, schemas.order, { method: "POST" }),
 };
+
+/** Where the "Sign in with GitHub" link points; the server sends the browser on to GitHub. */
+export const SIGN_IN_URL = `${API_BASE}/auth/github`;

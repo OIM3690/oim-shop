@@ -4,17 +4,11 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../app.ts";
+import { displayName } from "../schemas.ts";
 import { requireUser } from "../guards.ts";
 import { readEmployee } from "./employees.ts";
 
 const MANAGER = 5;
-
-export const displayName = z
-  .string()
-  .trim()
-  .min(1, "Enter a name")
-  .max(40, "Use at most 40 characters")
-  .regex(/^[\p{L}\p{M}\p{N} .'-]+$/u, "Use letters, digits, spaces, and . ' - only");
 
 export const me = new Hono<AppEnv>()
   .get("/", (c) => {

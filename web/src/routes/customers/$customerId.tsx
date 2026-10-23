@@ -6,6 +6,7 @@ import { OrderList } from "@/components/order-list";
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/query-states";
 import { Button } from "@/components/ui/button";
+import { formatCount, formatMoney } from "@/lib/format";
 import { customerQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 
@@ -53,6 +54,8 @@ function CustomerPage() {
           { label: "Contact", value: c.contact_name },
           { label: "City", value: c.city ?? "Not recorded" },
           { label: "Country", value: c.country ?? "Not recorded" },
+          { label: "Orders", value: formatCount(c.order_count) },
+          { label: "Revenue, all time", value: formatMoney(c.revenue_dollars) },
         ]}
       />
       <section className="space-y-4">

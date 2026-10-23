@@ -10,8 +10,8 @@
 // - Only the rep who entered an order can change it, and only before it ships.
 import { zValidator } from "@hono/zod-validator";
 import { Hono, type Context } from "hono";
-import { z } from "zod";
 import type { AppEnv } from "../app.ts";
+import * as schemas from "../schemas.ts";
 import { transaction, type Database } from "../db.ts";
 import { requireRep } from "../guards.ts";
 import { pageQuery, paginate, query } from "../http.ts";
@@ -21,28 +21,9 @@ import { ORDER_FROM, ORDER_SELECT, readOrder, toOrderSummary } from "./orders.ts
 
 const FIRST_ENTERED_ID = 1_000_000;
 
-const orderBody = z.strictObject({
-  customer_id: z.string().trim().min(1).max(10),
-  shipper_id: z.number().int().positive(),
-  required_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
-  freight: z.number().min(0).max(10_000),
-  lines: z
-    .array(
-      z.strictObject({
-        product_id: z.number().int().positive(),
-        quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
-        discount: z.number().min(0, "Discount cannot be negative").max(0.25, "Discount can be at most 25%"),
-      }),
-    )
-    .min(1, "Add at least one product")
-    .max(77)
-    .refine(
-      (lines) => new Set(lines.map((l) => l.product_id)).size === lines.length,
-      "Each product can appear once",
-    ),
-});
+const orderBody = schemas.orderInput;
 
-type OrderBody = z.infer<typeof orderBody>;
+type OrderBody = schemas.OrderInput;
 
 /** A refusal the form can show next to the field it concerns. */
 class Refusal extends Error {

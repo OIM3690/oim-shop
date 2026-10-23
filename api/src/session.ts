@@ -16,7 +16,8 @@ export interface SessionUser {
   employee_id: number | null;
 }
 
-export function startSession(c: Context, db: Database, userId: number, secure: boolean) {
+/** Stores a new session for the user and returns its token, which only the cookie will hold. */
+export function createSession(db: Database, userId: number) {
   const token = randomBytes(32).toString("base64url");
   const expires = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   db.prepare("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)").run(
@@ -24,6 +25,11 @@ export function startSession(c: Context, db: Database, userId: number, secure: b
     userId,
     expires.toISOString(),
   );
+  return { token, expires };
+}
+
+export function startSession(c: Context, db: Database, userId: number, secure: boolean) {
+  const { token, expires } = createSession(db, userId);
   setCookie(c, SESSION_COOKIE, token, { httpOnly: true, secure, sameSite: "Lax", path: "/", expires });
 }
 

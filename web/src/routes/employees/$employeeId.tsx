@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { api, type Employee } from "@/lib/api";
 import { dayBefore } from "@/lib/dates";
 import { fullName } from "@/lib/employees";
-import { formatCount, formatDate } from "@/lib/format";
+import { formatCount, formatDate, formatMoney } from "@/lib/format";
 import { employeeQuery, employeesQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 
@@ -104,7 +104,9 @@ function EmployeePage() {
               ),
           },
           { label: "Hired", value: formatDate(e.hire_date) },
-          { label: "Location", value: `${e.city}, ${e.country}` },
+          { label: "Location", value: [e.city, e.country].filter(Boolean).join(", ") || "Not recorded" },
+          { label: "Orders taken", value: formatCount(e.order_count) },
+          { label: "Revenue, all time", value: formatMoney(e.revenue_dollars) },
         ]}
       />
       <section className="space-y-4">

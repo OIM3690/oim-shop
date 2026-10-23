@@ -26,5 +26,9 @@
     "arctic": "^3.7.0",
     "hono": "^4.13.13",
     "zod": "^4.6.7"
+  },
+  "exports": {
+    "./schemas": "./src/schemas.ts",
+    "./testing": "./src/testing.ts"
   }
 }

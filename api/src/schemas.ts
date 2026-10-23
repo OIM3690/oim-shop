@@ -123,3 +123,37 @@ export type Dashboard = z.infer<typeof dashboard>;
 
 export const me = z.object({ signed_in: z.boolean(), employee: employee.nullable() });
 export type Me = z.infer<typeof me>;
+
+// What a rep sends. The server checks these, and the web app's forms check
+// the same schemas before sending, so a mistake shows next to its field.
+export const displayName = z
+  .string()
+  .trim()
+  .min(1, "Enter a name")
+  .max(40, "Use at most 40 characters")
+  .regex(/^[\p{L}\p{M}\p{N} .'-]+$/u, "Use letters, digits, spaces, and . ' - only");
+
+export const MAX_DISCOUNT = 0.25;
+
+export const orderLineInput = z.strictObject({
+  product_id: z.number().int().positive("Choose a product"),
+  quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
+  discount: z.number().min(0, "Discount cannot be negative").max(MAX_DISCOUNT, "Discount can be at most 25%"),
+});
+
+export const orderInput = z.strictObject({
+  customer_id: z.string().trim().min(1, "Choose a customer").max(10),
+  shipper_id: z.number().int().positive("Choose a shipper"),
+  required_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date"),
+  freight: z.number().min(0, "Freight cannot be negative").max(10_000, "Freight can be at most $10,000"),
+  lines: z
+    .array(orderLineInput)
+    .min(1, "Add at least one product")
+    .max(77)
+    .refine(
+      (lines) => new Set(lines.map((l) => l.product_id)).size === lines.length,
+      "Each product can appear once",
+    ),
+});
+
+export type OrderInput = z.infer<typeof orderInput>;

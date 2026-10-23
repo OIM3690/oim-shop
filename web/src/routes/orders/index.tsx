@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { allCustomersQuery, employeesQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
+import { sortParam } from "@/lib/sorting";
 import { useCountries } from "@/lib/use-countries";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -17,6 +18,7 @@ const searchSchema = z.object({
   country: z.string().optional().catch(undefined),
   from: isoDate.optional().catch(undefined),
   to: isoDate.optional().catch(undefined),
+  sort: sortParam(["order_date", "order_total"] as const),
   page: z.number().int().positive().optional().catch(undefined),
 });
 
@@ -28,7 +30,7 @@ export const Route = createFileRoute("/orders/")({
 });
 
 function OrdersPage() {
-  const { customer, employee, country, from, to, page = 1 } = Route.useSearch();
+  const { customer, employee, country, from, to, sort, page = 1 } = Route.useSearch();
   const navigate = Route.useNavigate();
   const customers = useQuery(allCustomersQuery());
   const employees = useQuery(employeesQuery());
@@ -81,7 +83,16 @@ function OrdersPage() {
       </FilterBar>
 
       <OrderList
-        query={{ customer_id: customer, employee_id: employee, country, from_date: from, to_date: to, page }}
+        query={{
+          customer_id: customer,
+          employee_id: employee,
+          country,
+          from_date: from,
+          to_date: to,
+          sort,
+          page,
+        }}
+        sorting={{ sort, onSort: (next) => void filter({ sort: next }) }}
         onPage={(next) =>
           void navigate({ search: (prev) => cleanSearch({ ...prev, page: next > 1 ? next : undefined }) })
         }

@@ -6,18 +6,7 @@ import { createRoot } from "react-dom/client";
 import { createQueryClient } from "./lib/query-client";
 import { createAppRouter } from "./router";
 
-async function start() {
-  // The end-to-end tests build the site with VITE_API_MOCK=true, which answers
-  // every oim-api request from recorded data. A normal build leaves this out.
-  if (import.meta.env.VITE_API_MOCK === "true") {
-    const { worker } = await import("./mocks/browser");
-    await worker.start({
-      serviceWorker: { url: `${import.meta.env.BASE_URL}mockServiceWorker.js` },
-      onUnhandledFrame: "bypass",
-      quiet: true,
-    });
-  }
-
+function start() {
   const queryClient = createQueryClient();
   const router = createAppRouter(queryClient);
 
@@ -30,4 +19,4 @@ async function start() {
   );
 }
 
-void start();
+start();

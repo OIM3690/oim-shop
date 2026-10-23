@@ -5,15 +5,19 @@ const MIGRATIONS = new URL("../../db/migrations/", import.meta.url);
 
 export type Database = DatabaseSync;
 
-/** Opens the SQLite file and applies any migration it has not seen yet. */
-export function openDatabase(path: string): Database {
+/**
+ * Opens the SQLite file and applies any migration it has not seen yet. A copy
+ * of a database that is already migrated can skip that step, as the web app's
+ * tests do (they run in jsdom, where the migrations folder is not reachable).
+ */
+export function openDatabase(path: string, { migrate: applyMigrations = true } = {}): Database {
   const db = new DatabaseSync(path);
   // WAL lets the web server read while sync or reset writes.
   db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;");
   // SQLite's own lower() only knows ASCII, so "RÖSSLE" would not find
   // "Rössle". fold() lowercases with JavaScript's full Unicode rules.
   db.function("fold", { deterministic: true }, (text) => (text === null ? null : String(text).toLowerCase()));
-  migrate(db);
+  if (applyMigrations) migrate(db);
   return db;
 }
 

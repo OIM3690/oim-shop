@@ -1,6 +1,7 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
 import type { DataTableFeatures } from "@/components/data-table/features";
+import { SortHeader } from "@/components/sort-header";
 import { ShippedBadge } from "@/components/status-badges";
 import type { OrderSummary } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -54,7 +55,8 @@ const employeeColumn = column.accessor("employee_name", {
 const shipToColumn = column.display({
   id: "ship-to",
   header: "Ship to",
-  cell: ({ row }) => `${row.original.ship_city}, ${row.original.ship_country}`,
+  cell: ({ row }) =>
+    [row.original.ship_city, row.original.ship_country].filter(Boolean).join(", ") || "Not recorded",
 });
 
 const totalColumn = column.accessor("order_total_dollars", {
@@ -67,15 +69,37 @@ const statusColumn = column.accessor("shipped_date", {
   cell: ({ getValue }) => <ShippedBadge shippedDate={getValue()} />,
 });
 
-/** Columns for a list of orders; a page about one customer or employee leaves that column out. */
-export function orderColumns(leaveOut?: "customer" | "employee") {
+export interface OrderSorting {
+  sort: string | undefined;
+  onSort: (sort: string | undefined) => void;
+}
+
+/**
+ * Columns for a list of orders; a page about one customer or employee leaves
+ * that column out. With sorting, Date and Total sort on the server.
+ */
+export function orderColumns(leaveOut?: "customer" | "employee", sorting?: OrderSorting) {
+  const date = sorting
+    ? {
+        ...dateColumn,
+        header: () => <SortHeader label="Date" field="order_date" {...sorting} firstDirection="desc" />,
+      }
+    : dateColumn;
+  const total = sorting
+    ? {
+        ...totalColumn,
+        header: () => (
+          <SortHeader label="Total" field="order_total" {...sorting} align="right" firstDirection="desc" />
+        ),
+      }
+    : totalColumn;
   return column.columns([
     orderColumn,
-    dateColumn,
+    date,
     ...(leaveOut === "customer" ? [] : [customerColumn]),
     ...(leaveOut === "employee" ? [] : [employeeColumn]),
     shipToColumn,
-    totalColumn,
+    total,
     statusColumn,
   ]);
 }

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { DataTable } from "@/components/data-table/data-table";
-import { orderColumns } from "@/components/order-columns";
+import { orderColumns, type OrderSorting } from "@/components/order-columns";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
 import type { OrderQuery } from "@/lib/api";
@@ -11,11 +11,12 @@ interface OrderListProps {
   query: OrderQuery;
   leaveOut?: "customer" | "employee";
   onPage: (page: number) => void;
+  sorting?: OrderSorting;
   empty: { title: string; description: string; action?: ReactNode };
 }
 
 /** One page of orders from the API, with every state a list needs. */
-export function OrderList({ query, leaveOut, onPage, empty }: OrderListProps) {
+export function OrderList({ query, leaveOut, onPage, sorting, empty }: OrderListProps) {
   const orders = useQuery(ordersQuery(query));
 
   if (orders.isPending) return <LoadingRows label="Loading orders" />;
@@ -26,7 +27,11 @@ export function OrderList({ query, leaveOut, onPage, empty }: OrderListProps) {
 
   return (
     <>
-      <DataTable columns={orderColumns(leaveOut)} data={orders.data.items} stale={orders.isPlaceholderData} />
+      <DataTable
+        columns={orderColumns(leaveOut, sorting)}
+        data={orders.data.items}
+        stale={orders.isPlaceholderData}
+      />
       <Pager pagination={orders.data.pagination} onPage={onPage} />
     </>
   );

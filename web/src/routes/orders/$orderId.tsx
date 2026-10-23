@@ -6,7 +6,9 @@ import type { DataTableFeatures } from "@/components/data-table/features";
 import { BackLink, DetailCard, DetailLoading } from "@/components/detail";
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/query-states";
+import { OrderActions } from "@/components/order-actions";
 import { ShippedBadge } from "@/components/status-badges";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Order } from "@/lib/api";
 import { formatCount, formatDate, formatMoney, formatPercent } from "@/lib/format";
@@ -82,8 +84,14 @@ function OrderPage() {
       <PageHeader
         title={`Order ${o.order_id}`}
         description={`Placed ${formatDate(o.order_date)}`}
-        actions={<ShippedBadge shippedDate={o.shipped_date} />}
+        actions={
+          <div className="flex items-center gap-2">
+            {o.entered ? <Badge variant="outline">Entered here</Badge> : null}
+            <ShippedBadge shippedDate={o.shipped_date} />
+          </div>
+        }
       />
+      <OrderActions order={o} />
       <DetailCard
         items={[
           {
@@ -113,7 +121,10 @@ function OrderPage() {
           { label: "Required by", value: formatDate(o.required_date) },
           { label: "Shipped", value: o.shipped_date ? formatDate(o.shipped_date) : "Not shipped" },
           { label: "Shipper", value: o.shipper },
-          { label: "Ship to", value: `${o.ship_city}, ${o.ship_country}` },
+          {
+            label: "Ship to",
+            value: [o.ship_city, o.ship_country].filter(Boolean).join(", ") || "Not recorded",
+          },
         ]}
       />
       <section className="space-y-4">

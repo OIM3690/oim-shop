@@ -61,7 +61,17 @@ function ProductPage() {
           { label: "Supplier", value: p.supplier },
           { label: "Quantity per unit", value: p.quantity_per_unit },
           { label: "Unit price", value: formatMoney(p.unit_price_dollars) },
-          { label: "Units in stock", value: formatCount(p.units_in_stock) },
+          {
+            label: "Units in stock",
+            value: (
+              <span className="inline-flex items-center gap-2">
+                {formatCount(p.units_in_stock)}
+                {p.low_stock && !p.discontinued ? <Badge variant="outline">Below reorder level</Badge> : null}
+              </span>
+            ),
+          },
+          { label: "Reorder level", value: formatCount(p.reorder_level) },
+          { label: "Revenue, all time", value: formatMoney(p.revenue_dollars) },
           {
             label: "Status",
             value: p.discontinued ? <Badge variant="destructive">Discontinued</Badge> : "Available to order",

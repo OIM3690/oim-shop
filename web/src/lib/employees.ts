@@ -1,6 +1,7 @@
 import type { Employee } from "./api";
 
-export const fullName = (e: Employee) => `${e.first_name} ${e.last_name}`;
+// The server joins first and last name; a rep has only the display name they chose.
+export const fullName = (e: Employee) => e.name;
 
 export interface ReportingNode {
   employee: Employee;

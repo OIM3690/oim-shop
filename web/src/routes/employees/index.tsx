@@ -5,10 +5,11 @@ import { DataTable } from "@/components/data-table/data-table";
 import type { DataTableFeatures } from "@/components/data-table/features";
 import { PageHeader } from "@/components/page-header";
 import { ErrorState, LoadingRows } from "@/components/query-states";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Employee } from "@/lib/api";
 import { fullName, reportingTree, type ReportingNode } from "@/lib/employees";
-import { formatDate } from "@/lib/format";
+import { formatCount, formatDate, formatMoney } from "@/lib/format";
 import { employeesQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/employees/")({
@@ -36,8 +37,11 @@ function columnsFor(employees: Employee[]) {
       id: "name",
       header: "Name",
       cell: ({ row }) => (
-        <span className="text-primary font-medium">
-          <EmployeeLink employee={row.original} />
+        <span className="inline-flex items-center gap-2">
+          <span className="text-primary font-medium">
+            <EmployeeLink employee={row.original} />
+          </span>
+          {row.original.is_rep ? <Badge variant="secondary">New rep</Badge> : null}
         </span>
       ),
     }),
@@ -56,11 +60,22 @@ function columnsFor(employees: Employee[]) {
     column.display({
       id: "location",
       header: "Location",
-      cell: ({ row }) => `${row.original.city}, ${row.original.country}`,
+      cell: ({ row }) =>
+        [row.original.city, row.original.country].filter(Boolean).join(", ") || (
+          <span className="text-muted-foreground">Not recorded</span>
+        ),
     }),
     column.accessor("hire_date", {
       header: "Hired",
       cell: ({ getValue }) => <span className="whitespace-nowrap">{formatDate(getValue())}</span>,
+    }),
+    column.accessor("order_count", {
+      header: () => <div className="text-right">Orders</div>,
+      cell: ({ getValue }) => <div className="text-right tabular-nums">{formatCount(getValue())}</div>,
+    }),
+    column.accessor("revenue_dollars", {
+      header: () => <div className="text-right">Revenue</div>,
+      cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
     }),
   ]);
 }
@@ -96,7 +111,7 @@ function EmployeesPage() {
           onRetry={() => void employees.refetch()}
         />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <DataTable columns={columnsFor(employees.data)} data={employees.data} />
           <Card>
             <CardHeader>

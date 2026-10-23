@@ -54,9 +54,11 @@ function NameForm({ current }: { current: string | undefined }) {
       if (!current) await navigate({ to: "/orders/new" });
     },
     onError: (error) => {
-      form.setError("display_name", {
-        message: error instanceof ApiError ? error.message : "Saving failed. Try again.",
-      });
+      form.setError(
+        "display_name",
+        { message: error instanceof ApiError ? error.message : "Saving failed. Try again." },
+        { shouldFocus: true },
+      );
     },
   });
 
@@ -88,11 +90,14 @@ function NameForm({ current }: { current: string | undefined }) {
                     id="display-name"
                     autoComplete="nickname"
                     aria-invalid={fieldState.invalid}
+                    aria-describedby={
+                      fieldState.invalid ? "display-name-hint display-name-error" : "display-name-hint"
+                    }
                   />
-                  <FieldDescription>
+                  <FieldDescription id="display-name-hint">
                     Up to 40 letters, digits, spaces, and . ' -. Your GitHub username is never shown.
                   </FieldDescription>
-                  <FieldError errors={[fieldState.error]} />
+                  <FieldError id="display-name-error" errors={[fieldState.error]} />
                 </Field>
               )}
             />

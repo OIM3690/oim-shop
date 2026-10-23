@@ -26,6 +26,10 @@ describe("signing in", () => {
     await user.type(screen.getByLabelText("Display name"), "<b>");
     await user.click(screen.getByRole("button", { name: "Start as a sales rep" }));
     expect(await screen.findByText("Use letters, digits, spaces, and . ' - only")).toBeInTheDocument();
+    expect(screen.getByLabelText("Display name")).toHaveFocus();
+    expect(screen.getByLabelText("Display name")).toHaveAccessibleDescription(
+      /Use letters, digits, spaces, and \. ' - only$/,
+    );
 
     await user.clear(screen.getByLabelText("Display name"));
     await user.type(screen.getByLabelText("Display name"), "Ana Ruiz");
@@ -74,6 +78,38 @@ describe("entering an order", () => {
     expect(await screen.findByText(/^Only [\d,]+ in stock$/)).toBeInTheDocument();
     expect(screen.getByText("Discount can be at most 25%")).toBeInTheDocument();
     expect(value("SELECT count(*) FROM orders WHERE entered_by_user IS NOT NULL")).toBe(0);
+  });
+
+  it("moves focus to the first field with a problem and ties the message to it", async () => {
+    signInAs(3007, "Ana");
+    const { user } = renderApp("/orders/new");
+    await user.selectOptions(await screen.findByLabelText("Customer"), "Alfreds Futterkiste");
+    await user.selectOptions(screen.getByLabelText("Product"), "Chai");
+    const quantity = screen.getByLabelText("Quantity");
+    await user.clear(quantity);
+    await user.type(quantity, "100000");
+
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+
+    await waitFor(() => expect(quantity).toHaveFocus());
+    expect(quantity).toHaveAccessibleDescription(/^Only [\d,]+ in stock$/);
+  });
+
+  it("puts the server's refusal on the field it names and moves focus there", async () => {
+    signInAs(3008, "Ana");
+    const { user } = renderApp("/orders/new");
+    await user.selectOptions(await screen.findByLabelText("Customer"), "Alfreds Futterkiste");
+    await user.selectOptions(screen.getByLabelText("Product"), "Chai");
+    const quantity = screen.getByLabelText("Quantity");
+    await user.clear(quantity);
+    await user.type(quantity, "5");
+    // Someone else takes the stock after the form loaded the catalog.
+    testDb().exec("UPDATE products SET units_in_stock = 1 WHERE product_id = 1");
+
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+
+    await waitFor(() => expect(quantity).toHaveFocus());
+    expect(quantity).toHaveAccessibleDescription("Only 1 of Chai in stock");
   });
 
   it("cancels the rep's own order after asking, and returns the stock", async () => {

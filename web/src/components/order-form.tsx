@@ -35,6 +35,10 @@ const inDays = (days: number) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
+/** Ties a control to the message under it, so a screen reader reads both. */
+const errorId = (id: string) => `${id}-error`;
+const describedBy = (id: string, invalid: boolean) => (invalid ? errorId(id) : undefined);
+
 /** The shared rules, plus the ones that need the catalog. */
 function formSchema(products: Map<number, Product>, held: Map<number, number>) {
   return orderInput.superRefine((input, ctx) => {
@@ -138,10 +142,14 @@ function LoadedOrderForm({
     },
     onError: (error) => {
       if (error instanceof ApiError && error.issues.length > 0) {
-        for (const issue of error.issues) {
+        error.issues.forEach((issue, i) => {
           // The server names fields the same way the form does, as in "lines.0.quantity".
-          form.setError(issue.path as FieldPath<OrderInput>, { message: issue.message });
-        }
+          form.setError(
+            issue.path as FieldPath<OrderInput>,
+            { message: issue.message },
+            { shouldFocus: i === 0 },
+          );
+        });
       } else {
         form.setError("root", { message: error.message });
       }
@@ -169,7 +177,12 @@ function LoadedOrderForm({
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid} className="sm:col-span-2">
                 <FieldLabel htmlFor="order-customer">Customer</FieldLabel>
-                <NativeSelect {...field} id="order-customer" aria-invalid={fieldState.invalid}>
+                <NativeSelect
+                  {...field}
+                  id="order-customer"
+                  aria-invalid={fieldState.invalid}
+                  aria-describedby={describedBy("order-customer", fieldState.invalid)}
+                >
                   <NativeSelectOption value="">Choose a customer</NativeSelectOption>
                   {customers.map((c) => (
                     <NativeSelectOption key={c.customer_id} value={c.customer_id}>
@@ -177,7 +190,7 @@ function LoadedOrderForm({
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
-                <FieldError errors={[fieldState.error]} />
+                <FieldError id={errorId("order-customer")} errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -188,11 +201,13 @@ function LoadedOrderForm({
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="order-shipper">Shipper</FieldLabel>
                 <NativeSelect
+                  ref={field.ref}
                   id="order-shipper"
                   value={String(field.value)}
                   onChange={(event) => field.onChange(Number(event.target.value))}
                   onBlur={field.onBlur}
                   aria-invalid={fieldState.invalid}
+                  aria-describedby={describedBy("order-shipper", fieldState.invalid)}
                 >
                   {shippers.map((s) => (
                     <NativeSelectOption key={s.shipper_id} value={String(s.shipper_id)}>
@@ -200,7 +215,7 @@ function LoadedOrderForm({
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
-                <FieldError errors={[fieldState.error]} />
+                <FieldError id={errorId("order-shipper")} errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -210,8 +225,14 @@ function LoadedOrderForm({
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="order-required">Required by</FieldLabel>
-                <Input {...field} id="order-required" type="date" aria-invalid={fieldState.invalid} />
-                <FieldError errors={[fieldState.error]} />
+                <Input
+                  {...field}
+                  id="order-required"
+                  type="date"
+                  aria-invalid={fieldState.invalid}
+                  aria-describedby={describedBy("order-required", fieldState.invalid)}
+                />
+                <FieldError id={errorId("order-required")} errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -222,6 +243,7 @@ function LoadedOrderForm({
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="order-freight">Freight, in dollars</FieldLabel>
                 <Input
+                  ref={field.ref}
                   id="order-freight"
                   type="number"
                   min={0}
@@ -230,8 +252,9 @@ function LoadedOrderForm({
                   onChange={(event) => field.onChange(event.target.valueAsNumber)}
                   onBlur={field.onBlur}
                   aria-invalid={fieldState.invalid}
+                  aria-describedby={describedBy("order-freight", fieldState.invalid)}
                 />
-                <FieldError errors={[fieldState.error]} />
+                <FieldError id={errorId("order-freight")} errors={[fieldState.error]} />
               </Field>
             )}
           />
@@ -261,11 +284,13 @@ function LoadedOrderForm({
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={`line-${i}-product`}>Product</FieldLabel>
                       <NativeSelect
+                        ref={field.ref}
                         id={`line-${i}-product`}
                         value={String(field.value)}
                         onChange={(event) => field.onChange(Number(event.target.value))}
                         onBlur={field.onBlur}
                         aria-invalid={fieldState.invalid}
+                        aria-describedby={describedBy(`line-${i}-product`, fieldState.invalid)}
                       >
                         <NativeSelectOption value="0">Choose a product</NativeSelectOption>
                         {products.map((p) => (
@@ -285,7 +310,7 @@ function LoadedOrderForm({
                           stock
                         </p>
                       ) : null}
-                      <FieldError errors={[fieldState.error]} />
+                      <FieldError id={errorId(`line-${i}-product`)} errors={[fieldState.error]} />
                     </Field>
                   )}
                 />
@@ -296,6 +321,7 @@ function LoadedOrderForm({
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={`line-${i}-quantity`}>Quantity</FieldLabel>
                       <Input
+                        ref={field.ref}
                         id={`line-${i}-quantity`}
                         type="number"
                         min={1}
@@ -304,8 +330,9 @@ function LoadedOrderForm({
                         onChange={(event) => field.onChange(event.target.valueAsNumber)}
                         onBlur={field.onBlur}
                         aria-invalid={fieldState.invalid}
+                        aria-describedby={describedBy(`line-${i}-quantity`, fieldState.invalid)}
                       />
-                      <FieldError errors={[fieldState.error]} />
+                      <FieldError id={errorId(`line-${i}-quantity`)} errors={[fieldState.error]} />
                     </Field>
                   )}
                 />
@@ -317,6 +344,7 @@ function LoadedOrderForm({
                       <FieldLabel htmlFor={`line-${i}-discount`}>Discount, %</FieldLabel>
                       {/* The API takes a fraction (0.1); people type a percent (10). */}
                       <Input
+                        ref={field.ref}
                         id={`line-${i}-discount`}
                         type="number"
                         min={0}
@@ -326,8 +354,9 @@ function LoadedOrderForm({
                         onChange={(event) => field.onChange(event.target.valueAsNumber / 100)}
                         onBlur={field.onBlur}
                         aria-invalid={fieldState.invalid}
+                        aria-describedby={describedBy(`line-${i}-discount`, fieldState.invalid)}
                       />
-                      <FieldError errors={[fieldState.error]} />
+                      <FieldError id={errorId(`line-${i}-discount`)} errors={[fieldState.error]} />
                     </Field>
                   )}
                 />

@@ -13,7 +13,7 @@ The product grows in tagged versions on one history. Open the version that match
 
 `v3` (its own server, a dashboard, sign-in and order entry) will be added to this table when it is released. The plan for all versions is in [`docs/prd.md`](docs/prd.md).
 
-The live copy of `v2` is at <https://oim3690.github.io/oim-shop/>.
+The live copy of the latest release is at <https://oim3690.github.io/oim-shop/>.
 
 ## Run v1
 

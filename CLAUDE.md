@@ -78,4 +78,5 @@ Run from the repository root; `web/` is an npm workspace. The machine is small, 
 - Tables use TanStack Table v9 through `components/data-table/`, with no row features registered: the API does paging, filtering and ordering.
 - `web/src/mocks/handlers.ts` imitates oim-api over data recorded in `web/src/mocks/data/`. Vitest uses it through `msw/node` (`src/test/setup.ts` fails on any unhandled request); the e2e build uses it through the service worker in `web/public/mockServiceWorker.js`. Page tests render the whole app at a URL with `src/test/render.tsx`.
 - Dark mode follows the operating system (`@custom-variant dark` is a media query in `index.css`); there is no `.dark` class.
+- The site deploys to GitHub Pages only when a `v*` tag is pushed and CI passes on it (the `github-pages` environment allows `v*` tags and no branch). Pushes to `main` run the tests and never deploy, so the live site is always the latest release.
 - `vite.config.ts` sets `base` to `/oim-shop/` (override with `VITE_BASE`) and copies `index.html` to `404.html` after a build for GitHub Pages.

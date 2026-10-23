@@ -198,7 +198,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 ## Deployment
 
 - **Pending**: the live address. Proposed: `https://oim-shop-js.zhili.dev`.
-- `v2` deploys to GitHub Pages from GitHub Actions after CI passes on `main`. Each build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app on GitHub Pages.
+- The site deploys to GitHub Pages from GitHub Actions when a version tag is pushed and its tests pass, so `https://oim3690.github.io/oim-shop/` always shows the latest release. Each build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app on GitHub Pages.
 - From `v3`, GitHub Actions builds the container image and the server pulls it; nothing is built on the server. Migrations run before the new version starts. The live address moves from GitHub Pages to the server.
 
 ## Open items

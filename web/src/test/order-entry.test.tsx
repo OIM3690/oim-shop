@@ -179,6 +179,21 @@ describe("entering an order", () => {
     expect(cancels).toHaveLength(1);
   });
 
+  it("offers to try again when the catalog does not load", async () => {
+    signInAs(3012, "Ana");
+    server.use(http.get("http://localhost:3000/api/shippers", () => new Response(null, { status: 500 })));
+    renderApp("/orders/new");
+    expect(await screen.findByText("The catalog did not load.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("says an order to edit does not exist", async () => {
+    signInAs(3013, "Ana");
+    renderApp("/orders/1/edit");
+    expect(await screen.findByText("There is no order 1.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+  });
+
   it("does not offer changes on someone else's order", async () => {
     const db = testDb();
     signInAs(3005, "Ben");

@@ -11,11 +11,11 @@ import { Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useForm, useWatch, type FieldPath } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ErrorState, LoadingRows } from "@/components/query-states";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { api, ApiError, type Order, type OrderInput, type Product } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
 import { allCustomersQuery, allProductsQuery, refetchAfterWrite, shippersQuery } from "@/lib/queries";
@@ -76,11 +76,18 @@ export function OrderForm({ order }: OrderFormProps) {
   const customers = useQuery(allCustomersQuery());
   const shippers = useQuery(shippersQuery());
 
-  if (products.isPending || customers.isPending || shippers.isPending) {
-    return <Skeleton className="h-96 w-full" />;
-  }
   if (products.isError || customers.isError || shippers.isError) {
-    return <p role="alert">The catalog did not load. Reload the page to try again.</p>;
+    const failed = [products, customers, shippers].filter((part) => part.isError);
+    return (
+      <ErrorState
+        error={failed[0]?.error}
+        what="The catalog"
+        onRetry={() => failed.forEach((part) => void part.refetch())}
+      />
+    );
+  }
+  if (products.isPending || customers.isPending || shippers.isPending) {
+    return <LoadingRows label="Loading the order form" rows={6} />;
   }
   return (
     <LoadedOrderForm

@@ -22,7 +22,22 @@ function EditOrderPage() {
         {(rep) => {
           if (order.isPending) return <DetailLoading label="Loading order" />;
           if (order.isError) {
-            return <ErrorState error={order.error} what="This order" onRetry={() => void order.refetch()} />;
+            return (
+              <ErrorState
+                error={order.error}
+                what="This order"
+                onRetry={() => void order.refetch()}
+                notFound={{
+                  title: `There is no order ${orderId}.`,
+                  description: "Check the address, or find the order in your list.",
+                  action: (
+                    <Button asChild>
+                      <Link to="/my-orders">Back to my orders</Link>
+                    </Button>
+                  ),
+                }}
+              />
+            );
           }
           const o = order.data;
           if (!o.entered || o.employee_id !== rep.employee_id || o.shipped_date) {

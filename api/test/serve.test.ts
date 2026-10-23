@@ -7,6 +7,10 @@ import { startServer, type ServeOptions } from "../src/serve.ts";
 import { freshDb, TEST_NOW } from "./helpers.ts";
 
 const PAGE = "<!doctype html><html><head><title>Northwind Sales</title></head><body></body></html>";
+const ANALYTICS = {
+  scriptUrl: "https://stats.example.com/script.js",
+  websiteId: "0b7f4c1e-0000-4000-8000-000000000000",
+};
 
 let dir = "";
 let stop = () => {};
@@ -46,5 +50,22 @@ describe("the access log", () => {
       expect.stringMatching(/^GET \/orders\/10248 200 \d+ms$/),
     ]);
     expect(lines.join("\n")).not.toMatch(/Ana|127\.0\.0\.1/);
+  });
+});
+
+describe("page analytics", () => {
+  it("adds the Umami tag to every page when the server is set up for it", async () => {
+    const { get } = await serveSite({ analytics: ANALYTICS });
+    for (const path of ["/", "/orders/10248"]) {
+      const html = await (await get(path)).text();
+      expect(html).toContain(
+        `<script defer src="${ANALYTICS.scriptUrl}" data-website-id="${ANALYTICS.websiteId}" data-domains="shop.example.com" data-exclude-search="true"></script></head>`,
+      );
+    }
+  });
+
+  it("adds nothing without it, as on your own machine or a fork", async () => {
+    const { get } = await serveSite();
+    expect(await (await get("/")).text()).toBe(PAGE);
   });
 });

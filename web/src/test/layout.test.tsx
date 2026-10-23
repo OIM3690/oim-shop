@@ -74,3 +74,23 @@ describe("a page number past the end", () => {
     expect(await screen.findByText(firstPage)).toBeInTheDocument();
   });
 });
+
+describe("the privacy page", () => {
+  it("explains the page counts when the server adds the Umami tag", async () => {
+    const tag = document.createElement("script");
+    tag.dataset.websiteId = "0b7f4c1e-0000-4000-8000-000000000000";
+    document.head.append(tag);
+    try {
+      renderApp("/privacy");
+      expect(await screen.findByText(/counts page views with Umami/)).toBeInTheDocument();
+    } finally {
+      tag.remove();
+    }
+  });
+
+  it("says nothing about page counts where none are taken", async () => {
+    renderApp("/privacy");
+    await screen.findByRole("heading", { name: "Privacy", level: 1 });
+    expect(screen.queryByText(/Umami/)).not.toBeInTheDocument();
+  });
+});

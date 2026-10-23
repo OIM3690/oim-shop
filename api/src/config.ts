@@ -16,6 +16,12 @@ const env = z
     CLIENT_IP_HEADER: z.string().default(""),
     GITHUB_CLIENT_ID: z.string().default(""),
     GITHUB_CLIENT_SECRET: z.string().default(""),
+    /** Both or neither: a self-hosted Umami's script and this site's ID there. Unset, nothing is counted. */
+    UMAMI_SCRIPT_URL: z.url().optional(),
+    UMAMI_WEBSITE_ID: z.uuid().optional(),
+  })
+  .refine((e) => Boolean(e.UMAMI_SCRIPT_URL) === Boolean(e.UMAMI_WEBSITE_ID), {
+    message: "Set UMAMI_SCRIPT_URL and UMAMI_WEBSITE_ID together, or neither",
   })
   .parse(process.env);
 
@@ -28,4 +34,8 @@ export const config = {
   webDist: env.WEB_DIST,
   clientIpHeader: env.CLIENT_IP_HEADER || undefined,
   github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET },
+  analytics:
+    env.UMAMI_SCRIPT_URL && env.UMAMI_WEBSITE_ID
+      ? { scriptUrl: env.UMAMI_SCRIPT_URL, websiteId: env.UMAMI_WEBSITE_ID }
+      : undefined,
 };

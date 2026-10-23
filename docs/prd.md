@@ -181,6 +181,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 - The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`; every write checks the request's origin; writes have a rate limit per user and length limits on every text field.
 - Secrets live in `.env` on your machine and in the server's environment file in production. The repository has `.env.example` only. Development and production use separate OAuth apps.
 - From `v3.1` the server writes an access log: method, path, status and time for each request, with no query string and no client address.
+- From `v3.1` the live site counts page views with a self-hosted Umami, which sets no cookie and keeps no IP address; it is off unless the server is given its address and the site's ID, so your own copy counts nothing. The privacy page describes it only where it runs, and the app never ties a count to a signed-in rep.
 - `SECURITY.md` explains how to report a vulnerability.
 
 ## Engineering practice

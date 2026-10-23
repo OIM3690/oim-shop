@@ -14,6 +14,7 @@ const server = startServer({
   port: config.port,
   host: config.host,
   webDist: config.webDist || undefined,
+  analytics: config.analytics,
 });
 
 // In the container this is process 1, which ignores a signal it does not

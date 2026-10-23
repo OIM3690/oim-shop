@@ -26,3 +26,12 @@ export function formatMonthTick(month: string) {
 /** True when a range ends before it starts; "2026-10" and "2026-10-01" both compare as text. */
 export const isReversed = (from: string | undefined, to: string | undefined) =>
   Boolean(from && to && from > to);
+
+/**
+ * Ticks for the revenue chart's month axis. Over two years, left to itself the
+ * chart skips labels to make room and can skip every January, so the years
+ * vanish; marking only the Januaries keeps one labelled tick per year.
+ */
+export function monthTicks(months: string[]) {
+  return months.length > 24 ? months.filter((m) => m.endsWith("-01")) : undefined;
+}

@@ -11,7 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Dashboard } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
-import { formatMonth, formatMonthTick, isReversed } from "@/lib/months";
+import { formatMonth, formatMonthTick, isReversed, monthTicks } from "@/lib/months";
 import { dashboardQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +72,7 @@ function DashboardPage() {
 function DashboardBody({ data, stale }: { data: Dashboard; stale: boolean }) {
   const { totals } = data;
   const average = totals.order_count ? totals.revenue_dollars / totals.order_count : 0;
+  const ticks = monthTicks(data.revenue_by_month.map((m) => m.month));
 
   return (
     <div className={cn("space-y-6 transition-opacity", stale && "opacity-60")} aria-busy={stale}>
@@ -103,6 +104,8 @@ function DashboardBody({ data, stale }: { data: Dashboard; stale: boolean }) {
                 axisLine={false}
                 tickMargin={8}
                 minTickGap={16}
+                ticks={ticks}
+                interval={ticks ? 0 : undefined}
                 tickFormatter={formatMonthTick}
               />
               <YAxis

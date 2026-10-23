@@ -104,3 +104,19 @@ export type Employee = z.infer<typeof employee>;
 export type OrderSummary = z.infer<typeof orderSummary>;
 export type OrderLine = z.infer<typeof orderLine>;
 export type Order = z.infer<typeof order>;
+
+const revenue = { revenue_dollars: z.number(), order_count: z.number() };
+
+export const dashboard = z.object({
+  from: z.string(),
+  to: z.string(),
+  totals: z.object(revenue),
+  revenue_by_month: z.array(z.object({ month: z.string(), ...revenue })),
+  top_products: z.array(
+    z.object({ product_id: z.number(), name: z.string(), revenue_dollars: z.number(), quantity: z.number() }),
+  ),
+  by_employee: z.array(z.object({ employee_id: z.number(), name: z.string(), ...revenue })),
+  by_country: z.array(z.object({ country: z.string(), ...revenue })),
+});
+
+export type Dashboard = z.infer<typeof dashboard>;

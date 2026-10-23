@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Database } from "./db.ts";
 import { customers } from "./routes/customers.ts";
+import { dashboard } from "./routes/dashboard.ts";
 import { employees } from "./routes/employees.ts";
 import { orders } from "./routes/orders.ts";
 import { products } from "./routes/products.ts";
@@ -34,7 +35,8 @@ export function createApp({ db, now }: AppOptions) {
     .route("/products", products)
     .route("/customers", customers)
     .route("/orders", orders)
-    .route("/employees", employees);
+    .route("/employees", employees)
+    .route("/dashboard", dashboard);
 
   return new Hono().route("/api", api);
 }

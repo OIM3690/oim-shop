@@ -55,3 +55,13 @@ test("filters live in the address", async ({ page }) => {
   await expect(page.getByLabel("Employee")).toHaveValue("5");
   await expect(page.getByRole("table")).not.toContainText("Michael Suyama");
 });
+
+test("v1 runs beside v2, at /v1/", async ({ page }) => {
+  // v1 calls oim-api from the browser; answer with no products, so the test stays offline.
+  await page.route("https://oim.zhili.dev/**", (route) =>
+    route.fulfill({ json: { items: [], pagination: { page: 1, per_page: 25, total: 0, pages: 1 } } }),
+  );
+  await page.goto("v1/");
+  await expect(page).toHaveTitle("Northwind Products");
+  await expect(page.getByRole("heading", { name: "Products", level: 1 })).toBeVisible();
+});

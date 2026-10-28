@@ -1,4 +1,4 @@
-import { copyFileSync } from "node:fs";
+import { copyFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
@@ -23,6 +23,26 @@ function spaFallback(): Plugin {
   };
 }
 
+// v1 is one HTML file that needs no build, so GitHub Pages serves it as it is,
+// beside v2, at /oim-shop/v1/.
+function withV1(): Plugin {
+  let outDir = "dist";
+  return {
+    name: "with-v1",
+    apply: "build",
+    configResolved(config) {
+      outDir = config.build.outDir;
+    },
+    closeBundle() {
+      mkdirSync(join(outDir, "v1"), { recursive: true });
+      copyFileSync(
+        fileURLToPath(new URL("../v1/index.html", import.meta.url)),
+        join(outDir, "v1", "index.html"),
+      );
+    },
+  };
+}
+
 // The site is served from a subpath on GitHub Pages; VITE_BASE overrides it.
 const base = process.env.VITE_BASE ?? "/oim-shop/";
 
@@ -33,6 +53,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     spaFallback(),
+    withV1(),
   ],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

@@ -1,8 +1,11 @@
 name: CI
 
+# v2 is maintained on a branch from its tag; a v2.x tag on that branch
+# publishes it, with v1 beside it at /v1/.
 on:
   push:
     branches: [main]
+    tags: ["v2.*"]
   pull_request:
 
 permissions:
@@ -21,8 +24,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
-      - name: Build, and check the GitHub Pages fallback
-        run: npm run build && cmp web/dist/index.html web/dist/404.html
+      - name: Build, and check the GitHub Pages fallback and v1
+        run: npm run build && cmp web/dist/index.html web/dist/404.html && cmp v1/index.html web/dist/v1/index.html
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name == 'push' && github.repository == 'OIM3690/oim-shop'
         with:
@@ -36,8 +39,9 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # Publishes the v2 site at https://oim3690.github.io/oim-shop/ after every
-  # green run on main. Forks run the tests but never deploy.
+  # Publishes the v2 site at https://oim3690.github.io/oim-shop/, and v1 at
+  # /oim-shop/v1/, after every green run on a v2.x tag. Forks run the tests
+  # but never deploy.
   deploy:
     needs: test
     if: github.event_name == 'push' && github.repository == 'OIM3690/oim-shop'

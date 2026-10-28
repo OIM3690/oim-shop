@@ -11,13 +11,16 @@ export type {
   Dashboard,
   Directory,
   Employee,
+  EmployeeDetail,
   Me,
   Order,
   OrderLine,
   OrderSummary,
   Pagination,
   Product,
+  Regions,
   Shipper,
+  Supplier,
 } from "api/schemas";
 
 export const API_BASE = "/api";
@@ -74,6 +77,11 @@ export type SortQuery = { sort?: string };
 export interface ProductQuery extends SortQuery {
   name?: string;
   category?: number;
+  supplier?: number;
+  page: number;
+}
+export interface SupplierQuery extends SortQuery {
+  name?: string;
   page: number;
 }
 export interface CustomerQuery extends SortQuery {
@@ -142,7 +150,17 @@ export const api = {
     }),
   /** Everyone's name and manager, for the reporting lines and the employee menus. */
   directory: (signal?: AbortSignal) => request("/employees/directory", schemas.directory, { signal }),
-  employee: (id: number, signal?: AbortSignal) => request(`/employees/${id}`, schemas.employee, { signal }),
+  employee: (id: number, signal?: AbortSignal) =>
+    request(`/employees/${id}`, schemas.employeeDetail, { signal }),
+
+  suppliers: (query: SupplierQuery, signal?: AbortSignal) =>
+    request("/suppliers", schemas.pageOf(schemas.supplier), {
+      params: { ...query, per_page: PER_PAGE },
+      signal,
+    }),
+  supplier: (id: number, signal?: AbortSignal) => request(`/suppliers/${id}`, schemas.supplier, { signal }),
+
+  regions: (signal?: AbortSignal) => request("/regions", schemas.regions, { signal }),
 
   orders: (query: OrderQuery, signal?: AbortSignal) =>
     request("/orders", schemas.pageOf(schemas.orderSummary), {
@@ -167,6 +185,10 @@ export const api = {
   cancelOrder: (id: number) => request(`/orders/${id}/cancel`, nothing, { method: "POST" }),
   shipOrder: (id: number) => request(`/orders/${id}/ship`, schemas.order, { method: "POST" }),
 };
+
+/** Images the API serves; an <img> loads them itself, so they do not go through request(). */
+export const categoryPictureUrl = (categoryId: number) => `${API_BASE}/categories/${categoryId}/picture`;
+export const employeePhotoUrl = (employeeId: number) => `${API_BASE}/employees/${employeeId}/photo`;
 
 /** Where the "Sign in with GitHub" link points; the server sends the browser on to GitHub. */
 export const SIGN_IN_URL = `${API_BASE}/auth/github`;

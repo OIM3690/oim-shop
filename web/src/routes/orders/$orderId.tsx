@@ -3,6 +3,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { DataTable } from "@/components/data-table/data-table";
 import type { DataTableFeatures } from "@/components/data-table/features";
+import { Address } from "@/components/address";
 import { BackLink, DetailCard, DetailLoading } from "@/components/detail";
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/query-states";
@@ -122,10 +123,29 @@ function OrderPage() {
           },
           { label: "Required by", value: formatDate(o.required_date) },
           { label: "Shipped", value: o.shipped_date ? formatDate(o.shipped_date) : "Not shipped" },
-          { label: "Shipper", value: o.shipper },
+          {
+            label: "Shipper",
+            value: (
+              <>
+                <span className="block">{o.shipper}</span>
+                {o.shipper_phone ? (
+                  <span className="text-muted-foreground block text-sm">{o.shipper_phone}</span>
+                ) : null}
+              </>
+            ),
+          },
           {
             label: "Ship to",
-            value: [o.ship_city, o.ship_country].filter(Boolean).join(", ") || "Not recorded",
+            value: (
+              <Address
+                name={o.ship_name}
+                address={o.ship_address}
+                city={o.ship_city}
+                region={o.ship_region}
+                postal_code={o.ship_postal_code}
+                country={o.ship_country}
+              />
+            ),
           },
         ]}
       />

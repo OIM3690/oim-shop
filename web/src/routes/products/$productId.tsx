@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/query-states";
 import { StockBadge } from "@/components/status-badges";
 import { Button } from "@/components/ui/button";
+import { categoryPictureUrl } from "@/lib/api";
 import { formatCount, formatMoney } from "@/lib/format";
 import { categoriesQuery, productQuery } from "@/lib/queries";
 
@@ -51,18 +52,39 @@ function ProductPage() {
           {
             label: "Category",
             value: (
-              <>
-                {p.category}
-                {description ? (
-                  <span className="text-muted-foreground block text-sm">{description}</span>
-                ) : null}
-              </>
+              <div className="flex items-start gap-3">
+                <img
+                  src={categoryPictureUrl(p.category_id)}
+                  alt={p.category}
+                  width={64}
+                  height={64}
+                  className="size-16 shrink-0 rounded-md object-cover"
+                />
+                <div>
+                  {p.category}
+                  {description ? (
+                    <span className="text-muted-foreground block text-sm">{description}</span>
+                  ) : null}
+                </div>
+              </div>
             ),
           },
-          { label: "Supplier", value: p.supplier },
+          {
+            label: "Supplier",
+            value: (
+              <Link
+                to="/suppliers/$supplierId"
+                params={{ supplierId: String(p.supplier_id) }}
+                className="hover:underline"
+              >
+                {p.supplier}
+              </Link>
+            ),
+          },
           { label: "Quantity per unit", value: p.quantity_per_unit },
           { label: "Unit price", value: formatMoney(p.unit_price_dollars) },
           { label: "Units in stock", value: formatCount(p.units_in_stock) },
+          { label: "Units on order", value: formatCount(p.units_on_order) },
           { label: "Reorder level", value: formatCount(p.reorder_level) },
           { label: "Revenue, all time", value: formatMoney(p.revenue_dollars) },
           {

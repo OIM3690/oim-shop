@@ -10,6 +10,7 @@ import {
   type OrderQuery,
   type ProductQuery,
   type SortQuery,
+  type SupplierQuery,
 } from "./api";
 
 const HOUR = 60 * 60 * 1000;
@@ -67,6 +68,19 @@ export const customerQuery = (id: string) =>
 
 export const employeeQuery = (id: number) =>
   queryOptions({ queryKey: ["employee", id], queryFn: ({ signal }) => api.employee(id, signal) });
+
+export const suppliersQuery = (query: SupplierQuery) =>
+  queryOptions({
+    queryKey: ["suppliers", query],
+    queryFn: ({ signal }) => api.suppliers(query, signal),
+    placeholderData: keepPreviousData,
+  });
+
+export const supplierQuery = (id: number) =>
+  queryOptions({ queryKey: ["supplier", id], queryFn: ({ signal }) => api.supplier(id, signal) });
+
+export const regionsQuery = () =>
+  queryOptions({ queryKey: ["regions"], queryFn: ({ signal }) => api.regions(signal), staleTime: HOUR });
 
 export const ordersQuery = (query: OrderQuery) =>
   queryOptions({

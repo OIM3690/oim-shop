@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyOrdersRouteImport } from './routes/my-orders'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TerritoriesRouteImport } from './routes/territories'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as CustomersIndexRouteImport } from './routes/customers/index'
 import { Route as CustomersCustomerIdRouteImport } from './routes/customers/$customerId'
@@ -22,6 +23,8 @@ import { Route as OrdersOrderIdRouteImport } from './routes/orders/$orderId'
 import { Route as OrdersNewRouteImport } from './routes/orders/new'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
+import { Route as SuppliersIndexRouteImport } from './routes/suppliers/index'
+import { Route as SuppliersSupplierIdRouteImport } from './routes/suppliers/$supplierId'
 import { Route as OrdersOrderIdEditRouteImport } from './routes/orders/$orderId_.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -37,6 +40,11 @@ const MyOrdersRoute = MyOrdersRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerritoriesRoute = TerritoriesRouteImport.update({
+  id: '/territories',
+  path: '/territories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -89,6 +97,16 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   path: '/products/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuppliersIndexRoute = SuppliersIndexRouteImport.update({
+  id: '/suppliers/',
+  path: '/suppliers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuppliersSupplierIdRoute = SuppliersSupplierIdRouteImport.update({
+  id: '/suppliers/$supplierId',
+  path: '/suppliers/$supplierId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrdersOrderIdEditRoute = OrdersOrderIdEditRouteImport.update({
   id: '/orders/$orderId_/edit',
   path: '/orders/$orderId/edit',
@@ -99,32 +117,38 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/my-orders': typeof MyOrdersRoute
   '/privacy': typeof PrivacyRoute
+  '/territories': typeof TerritoriesRoute
   '/welcome': typeof WelcomeRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/orders/new': typeof OrdersNewRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/suppliers/$supplierId': typeof SuppliersSupplierIdRoute
   '/customers/': typeof CustomersIndexRoute
   '/employees/': typeof EmployeesIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/suppliers/': typeof SuppliersIndexRoute
   '/orders/$orderId/edit': typeof OrdersOrderIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/my-orders': typeof MyOrdersRoute
   '/privacy': typeof PrivacyRoute
+  '/territories': typeof TerritoriesRoute
   '/welcome': typeof WelcomeRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/orders/new': typeof OrdersNewRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/suppliers/$supplierId': typeof SuppliersSupplierIdRoute
   '/customers': typeof CustomersIndexRoute
   '/employees': typeof EmployeesIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/suppliers': typeof SuppliersIndexRoute
   '/orders/$orderId/edit': typeof OrdersOrderIdEditRoute
 }
 export interface FileRoutesById {
@@ -132,16 +156,19 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/my-orders': typeof MyOrdersRoute
   '/privacy': typeof PrivacyRoute
+  '/territories': typeof TerritoriesRoute
   '/welcome': typeof WelcomeRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/orders/new': typeof OrdersNewRoute
   '/products/$productId': typeof ProductsProductIdRoute
+  '/suppliers/$supplierId': typeof SuppliersSupplierIdRoute
   '/customers/': typeof CustomersIndexRoute
   '/employees/': typeof EmployeesIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/suppliers/': typeof SuppliersIndexRoute
   '/orders/$orderId_/edit': typeof OrdersOrderIdEditRoute
 }
 export interface FileRouteTypes {
@@ -150,48 +177,57 @@ export interface FileRouteTypes {
     | '/'
     | '/my-orders'
     | '/privacy'
+    | '/territories'
     | '/welcome'
     | '/customers/$customerId'
     | '/employees/$employeeId'
     | '/orders/$orderId'
     | '/orders/new'
     | '/products/$productId'
+    | '/suppliers/$supplierId'
     | '/customers/'
     | '/employees/'
     | '/orders/'
     | '/products/'
+    | '/suppliers/'
     | '/orders/$orderId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/my-orders'
     | '/privacy'
+    | '/territories'
     | '/welcome'
     | '/customers/$customerId'
     | '/employees/$employeeId'
     | '/orders/$orderId'
     | '/orders/new'
     | '/products/$productId'
+    | '/suppliers/$supplierId'
     | '/customers'
     | '/employees'
     | '/orders'
     | '/products'
+    | '/suppliers'
     | '/orders/$orderId/edit'
   id:
     | '__root__'
     | '/'
     | '/my-orders'
     | '/privacy'
+    | '/territories'
     | '/welcome'
     | '/customers/$customerId'
     | '/employees/$employeeId'
     | '/orders/$orderId'
     | '/orders/new'
     | '/products/$productId'
+    | '/suppliers/$supplierId'
     | '/customers/'
     | '/employees/'
     | '/orders/'
     | '/products/'
+    | '/suppliers/'
     | '/orders/$orderId_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -199,16 +235,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MyOrdersRoute: typeof MyOrdersRoute
   PrivacyRoute: typeof PrivacyRoute
+  TerritoriesRoute: typeof TerritoriesRoute
   WelcomeRoute: typeof WelcomeRoute
   CustomersCustomerIdRoute: typeof CustomersCustomerIdRoute
   EmployeesEmployeeIdRoute: typeof EmployeesEmployeeIdRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   OrdersNewRoute: typeof OrdersNewRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
+  SuppliersSupplierIdRoute: typeof SuppliersSupplierIdRoute
   CustomersIndexRoute: typeof CustomersIndexRoute
   EmployeesIndexRoute: typeof EmployeesIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  SuppliersIndexRoute: typeof SuppliersIndexRoute
   OrdersOrderIdEditRoute: typeof OrdersOrderIdEditRoute
 }
 
@@ -233,6 +272,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/territories': {
+      id: '/territories'
+      path: '/territories'
+      fullPath: '/territories'
+      preLoaderRoute: typeof TerritoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/welcome': {
@@ -305,6 +351,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/suppliers/': {
+      id: '/suppliers/'
+      path: '/suppliers'
+      fullPath: '/suppliers/'
+      preLoaderRoute: typeof SuppliersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/suppliers/$supplierId': {
+      id: '/suppliers/$supplierId'
+      path: '/suppliers/$supplierId'
+      fullPath: '/suppliers/$supplierId'
+      preLoaderRoute: typeof SuppliersSupplierIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orders/$orderId_/edit': {
       id: '/orders/$orderId_/edit'
       path: '/orders/$orderId/edit'
@@ -319,16 +379,19 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MyOrdersRoute: MyOrdersRoute,
   PrivacyRoute: PrivacyRoute,
+  TerritoriesRoute: TerritoriesRoute,
   WelcomeRoute: WelcomeRoute,
   CustomersCustomerIdRoute: CustomersCustomerIdRoute,
   EmployeesEmployeeIdRoute: EmployeesEmployeeIdRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   OrdersNewRoute: OrdersNewRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
+  SuppliersSupplierIdRoute: SuppliersSupplierIdRoute,
   CustomersIndexRoute: CustomersIndexRoute,
   EmployeesIndexRoute: EmployeesIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  SuppliersIndexRoute: SuppliersIndexRoute,
   OrdersOrderIdEditRoute: OrdersOrderIdEditRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,17 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { DataTable } from "@/components/data-table/data-table";
-import { sortable, type DataTableFeatures } from "@/components/data-table/features";
 import { FilterBar, SearchField, SelectField } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
+import { productColumns } from "@/components/product-columns";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows, PastTheEnd } from "@/components/query-states";
-import { StockLabel } from "@/components/status-badges";
 import { Button } from "@/components/ui/button";
-import type { Product } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
 import { categoriesQuery, optionsFailed, productsQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 import { sortParam } from "@/lib/sorting";
@@ -27,45 +23,6 @@ export const Route = createFileRoute("/products/")({
   validateSearch: searchSchema,
   component: ProductsPage,
 });
-
-const column = createColumnHelper<DataTableFeatures, Product>();
-
-const columns = column.columns([
-  column.accessor("name", {
-    header: "Product",
-    meta: { ...sortable("name"), wrap: true },
-    cell: ({ row }) => (
-      <Link
-        to="/products/$productId"
-        params={{ productId: String(row.original.product_id) }}
-        className="text-primary font-medium hover:underline"
-      >
-        {row.original.name}
-      </Link>
-    ),
-  }),
-  column.accessor("category", { header: "Category" }),
-  column.accessor("unit_price_dollars", {
-    header: "Unit price",
-    meta: sortable("unit_price", true),
-    cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
-  }),
-  column.display({
-    id: "stock",
-    header: "In stock",
-    meta: sortable("units_in_stock", true),
-    cell: ({ row }) => (
-      <div className="text-right">
-        <StockLabel product={row.original} />
-      </div>
-    ),
-  }),
-  column.accessor("revenue_dollars", {
-    header: "Revenue",
-    meta: sortable("revenue", true),
-    cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
-  }),
-]);
 
 function ProductsPage() {
   const { name, category, sort, page = 1 } = Route.useSearch();
@@ -117,7 +74,7 @@ function ProductsPage() {
       ) : (
         <>
           <DataTable
-            columns={columns}
+            columns={productColumns}
             data={products.data.items}
             stale={products.isPlaceholderData}
             sorting={{ sort, onSort: (next) => void update({ sort: next }) }}

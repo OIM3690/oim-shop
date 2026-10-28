@@ -1,6 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { Building2, ClipboardList, LayoutDashboard, Package, ReceiptText, Users } from "lucide-react";
+import {
+  Building2,
+  ClipboardList,
+  Factory,
+  LayoutDashboard,
+  Map as MapIcon,
+  Package,
+  ReceiptText,
+  Users,
+} from "lucide-react";
 import { Account } from "@/components/account";
 import {
   Sidebar,
@@ -22,6 +31,8 @@ const sections = [
   { to: "/customers", label: "Customers", icon: Building2, exact: false },
   { to: "/orders", label: "Orders", icon: ReceiptText, exact: false },
   { to: "/employees", label: "Employees", icon: Users, exact: false },
+  { to: "/suppliers", label: "Suppliers", icon: Factory, exact: false },
+  { to: "/territories", label: "Territories", icon: MapIcon, exact: false },
 ] as const;
 
 // v1 and v2 read oim-api from the browser, so GitHub Pages runs them as they were tagged.

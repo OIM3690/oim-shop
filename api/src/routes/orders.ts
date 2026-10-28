@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../app.ts";
-import { bool, notFound, pageQuery, paginate, query, sortQuery, textQuery } from "../http.ts";
+import { bool, notFound, pageQuery, paginate, query, sortQuery, textQuery, usedBy } from "../http.ts";
+import { shownName, viewerOf, type Viewer } from "../names.ts";
 import * as schemas from "../schemas.ts";
 import { SAME_CUSTOMER } from "./customers.ts";
 
@@ -9,7 +10,7 @@ export const ORDER_SELECT = `
   o.order_id, o.customer_id, c.company_name AS customer_name, o.order_date, o.required_date, o.shipped_date,
   o.shipper_id, s.name AS shipper, s.phone AS shipper_phone, o.ship_name, o.ship_address, o.ship_city,
   o.ship_region, o.ship_postal_code, o.ship_country, o.freight AS freight_dollars, o.line_count,
-  o.lines_total AS order_total_dollars, o.employee_id, trim(e.first_name || ' ' || e.last_name) AS employee_name,
+  o.lines_total AS order_total_dollars, o.employee_id, ${shownName("e")} AS employee_name,
   o.entered_by_user IS NOT NULL AS entered`;
 
 export const ORDER_FROM = `
@@ -75,8 +76,9 @@ const LINES = `
   FROM order_lines l JOIN products p USING (product_id)
   WHERE l.order_id = ? ORDER BY l.product_id`;
 
-export function readOrder(db: AppEnv["Variables"]["db"], orderId: number) {
-  const row = db.prepare(`SELECT ${ORDER_SELECT} FROM ${ORDER_FROM} WHERE o.order_id = ?`).get(orderId);
+export function readOrder(db: AppEnv["Variables"]["db"], orderId: number, viewer: Viewer) {
+  const sql = `SELECT ${ORDER_SELECT} FROM ${ORDER_FROM} WHERE o.order_id = :order_id`;
+  const row = db.prepare(sql).get(usedBy(sql, { ...viewer, order_id: orderId }));
   if (!row) return undefined;
   const lines = db.prepare(LINES).all(orderId);
   return schemas.order.parse({ ...toOrderSummary(row), lines });
@@ -90,7 +92,7 @@ export const orders = new Hono<AppEnv>()
       paginate(
         c.var.db,
         { select: ORDER_SELECT, from: ORDER_FROM, where, orderBy: `${q.sort}, o.order_id DESC` },
-        params,
+        { ...params, ...viewerOf(c) },
         q.page,
         q.per_page,
         toOrderSummary,
@@ -98,6 +100,6 @@ export const orders = new Hono<AppEnv>()
     );
   })
   .get("/:id{[0-9]+}", (c) => {
-    const found = readOrder(c.var.db, Number(c.req.param("id")));
+    const found = readOrder(c.var.db, Number(c.req.param("id")), viewerOf(c));
     return found ? c.json(found) : c.json(notFound(`order ${c.req.param("id")}`), 404);
   });

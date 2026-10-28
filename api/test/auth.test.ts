@@ -93,7 +93,9 @@ describe("sign-in", () => {
     });
     expect(me.employee!.employee_id).toBeGreaterThan(9);
 
-    const listed = schemas.directory.parse(await (await app.request("/api/employees/directory")).json());
+    const listed = schemas.directory.parse(
+      await (await app.request("/api/employees/directory", as(cookie))).json(),
+    );
     expect(listed.map((e) => e.name)).toContain("Ana Ruiz");
   });
 

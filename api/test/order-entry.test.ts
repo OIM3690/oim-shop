@@ -76,7 +76,7 @@ describe("entering an order", () => {
   });
 
   it("shows up at once on the dashboard and in the customer's revenue", async () => {
-    const { app, alice } = await setup();
+    const { db, app, alice } = await setup();
     const before = schemas.dashboard.parse(await (await app.request("/api/dashboard")).json());
     const customerBefore = schemas.customer.parse(await (await app.request("/api/customers/ALFKI")).json());
     await place(app, alice);
@@ -86,7 +86,8 @@ describe("entering an order", () => {
     expect(Math.round((after.totals.revenue_dollars - before.totals.revenue_dollars) * 100)).toBe(26550);
     expect(after.totals.order_count - before.totals.order_count).toBe(1);
     expect(Math.round((customerAfter.revenue_dollars - customerBefore.revenue_dollars) * 100)).toBe(26550);
-    expect(after.by_employee.find((e) => e.name === "Ana")?.revenue_dollars).toBe(265.5);
+    const ana = one(db, "SELECT employee_id FROM employees WHERE first_name = 'Ana'").employee_id;
+    expect(after.by_employee.find((e) => e.employee_id === ana)?.revenue_dollars).toBe(265.5);
   });
 
   it("ships to the customer's name and full address", async () => {

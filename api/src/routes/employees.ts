@@ -1,17 +1,18 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../app.ts";
 import { requireUser } from "../guards.ts";
-import { bool, notFound, pageQuery, paginate, query, sortQuery } from "../http.ts";
+import { bool, notFound, pageQuery, paginate, query, sortQuery, usedBy } from "../http.ts";
+import { shownName, viewerOf, type Viewer } from "../names.ts";
 import * as schemas from "../schemas.ts";
 
 // Each sign-in adds a rep, so the directory has a ceiling like every other list.
 export const MAX_DIRECTORY = 1000;
 
-const NAME = (alias: string) => `trim(${alias}.first_name || ' ' || ${alias}.last_name)`;
-
+// A rep's last name is empty, so the first name carries the name shown.
 const SELECT = `
-  e.employee_id, e.first_name, e.last_name, ${NAME("e")} AS name, e.title, e.title_of_courtesy,
-  e.reports_to, ${NAME("m")} AS manager_name, e.hire_date, e.city, e.country,
+  e.employee_id, CASE WHEN e.user_id IS NULL THEN e.first_name ELSE ${shownName("e")} END AS first_name,
+  e.last_name, ${shownName("e")} AS name, e.title, e.title_of_courtesy,
+  e.reports_to, ${shownName("m")} AS manager_name, e.hire_date, e.city, e.country,
   e.user_id IS NOT NULL AS is_rep,
   coalesce(t.order_count, 0) AS order_count, coalesce(t.revenue, 0) AS revenue_dollars`;
 
@@ -24,8 +25,9 @@ const FROM = `
 const toEmployee = (row: Record<string, unknown>) =>
   schemas.employee.parse({ ...row, is_rep: bool(row.is_rep) });
 
-export function readEmployee(db: AppEnv["Variables"]["db"], employeeId: number) {
-  const row = db.prepare(`SELECT ${SELECT} FROM ${FROM} WHERE e.employee_id = ?`).get(employeeId);
+export function readEmployee(db: AppEnv["Variables"]["db"], employeeId: number, viewer: Viewer) {
+  const sql = `SELECT ${SELECT} FROM ${FROM} WHERE e.employee_id = :employee_id`;
+  const row = db.prepare(sql).get(usedBy(sql, { ...viewer, employee_id: employeeId }));
   return row ? toEmployee(row) : null;
 }
 
@@ -51,7 +53,7 @@ export const employees = new Hono<AppEnv>()
         c.var.db,
         // employee_id breaks ties, so a page never repeats or skips a row.
         { select: SELECT, from: FROM, where: [], orderBy: `${q.sort}, e.employee_id` },
-        {},
+        { ...viewerOf(c) },
         q.page,
         q.per_page,
         toEmployee,
@@ -59,21 +61,15 @@ export const employees = new Hono<AppEnv>()
       return c.json(page);
     },
   )
-  .get("/directory", (c) =>
-    c.json(
-      schemas.directory.parse(
-        c.var.db
-          .prepare(
-            `SELECT employee_id, ${NAME("e")} AS name, title, reports_to FROM employees e
-             ORDER BY employee_id LIMIT ?`,
-          )
-          .all(MAX_DIRECTORY),
-      ),
-    ),
-  )
+  .get("/directory", (c) => {
+    const sql = `SELECT employee_id, ${shownName("e")} AS name, title, reports_to FROM employees e
+                 ORDER BY employee_id LIMIT :limit`;
+    const rows = c.var.db.prepare(sql).all(usedBy(sql, { ...viewerOf(c), limit: MAX_DIRECTORY }));
+    return c.json(schemas.directory.parse(rows));
+  })
   .get("/:id{[0-9]+}", (c) => {
     const id = Number(c.req.param("id"));
-    const found = readEmployee(c.var.db, id);
+    const found = readEmployee(c.var.db, id, viewerOf(c));
     if (!found) return c.json(notFound(`employee ${id}`), 404);
     const territories = c.var.db
       .prepare(

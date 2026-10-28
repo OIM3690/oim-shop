@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { AppEnv } from "../app.ts";
 import { displayName } from "../schemas.ts";
 import { requireUser } from "../guards.ts";
+import { viewerOf } from "../names.ts";
 import { assignReporting } from "../reporting.ts";
 import { readEmployee } from "./employees.ts";
 
@@ -16,7 +17,7 @@ export const me = new Hono<AppEnv>()
     return c.json({
       signed_in: Boolean(user),
       role: user?.role ?? null,
-      employee: user?.employee_id ? readEmployee(c.var.db, user.employee_id) : null,
+      employee: user?.employee_id ? readEmployee(c.var.db, user.employee_id, viewerOf(c)) : null,
     });
   })
   .put(
@@ -45,6 +46,10 @@ export const me = new Hono<AppEnv>()
       const employeeId = Number(
         db.prepare("SELECT employee_id FROM employees WHERE user_id = ?").get(user.user_id)!.employee_id,
       );
-      return c.json({ signed_in: true, role: user.role, employee: readEmployee(db, employeeId) });
+      return c.json({
+        signed_in: true,
+        role: user.role,
+        employee: readEmployee(db, employeeId, { viewer_role: user.role, viewer_employee: employeeId }),
+      });
     },
   );

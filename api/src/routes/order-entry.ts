@@ -15,6 +15,7 @@ import * as schemas from "../schemas.ts";
 import { transaction, type Database } from "../db.ts";
 import { requireRep } from "../guards.ts";
 import { pageQuery, paginate, query } from "../http.ts";
+import { viewerOf } from "../names.ts";
 import { monthsOf, refreshOrderTotals, refreshProductMonthSales } from "../totals.ts";
 import { SAME_CUSTOMER } from "./customers.ts";
 import { ORDER_FROM, ORDER_SELECT, orderListQuery, readOrder, toOrderSummary } from "./orders.ts";
@@ -169,7 +170,7 @@ export const orderEntry = new Hono<AppEnv>()
         refreshProductMonthSales(db, monthsOf(db, [id]));
         return id;
       });
-      return c.json(readOrder(db, orderId), 201);
+      return c.json(readOrder(db, orderId, viewerOf(c)), 201);
     } catch (error) {
       return refused(c, error);
     }
@@ -200,7 +201,7 @@ export const orderEntry = new Hono<AppEnv>()
         refreshOrderTotals(db, [own.orderId]);
         refreshProductMonthSales(db, monthsOf(db, [own.orderId]));
       });
-      return c.json(readOrder(db, own.orderId));
+      return c.json(readOrder(db, own.orderId, viewerOf(c)));
     } catch (error) {
       return refused(c, error);
     }
@@ -221,7 +222,7 @@ export const orderEntry = new Hono<AppEnv>()
     const own = ownOrder(c);
     if (own.error) return own.error;
     c.var.db.prepare("UPDATE orders SET shipped_date = ? WHERE order_id = ?").run(c.var.now(), own.orderId);
-    return c.json(readOrder(c.var.db, own.orderId));
+    return c.json(readOrder(c.var.db, own.orderId, viewerOf(c)));
   });
 
 /** GET /api/me/orders: the signed-in rep's own orders, newest first unless sorted like /api/orders. */
@@ -240,7 +241,7 @@ export const myOrders = new Hono<AppEnv>().get(
           where: ["o.entered_by_user = :user"],
           orderBy: `${q.sort}, o.order_id DESC`,
         },
-        { user: c.var.user!.user_id },
+        { user: c.var.user!.user_id, ...viewerOf(c) },
         q.page,
         q.per_page,
         toOrderSummary,

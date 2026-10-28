@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../app.ts";
 import { query, usedBy } from "../http.ts";
+import { shownName, viewerOf } from "../names.ts";
 import * as schemas from "../schemas.ts";
 
 const MAX_MONTHS = 120;
@@ -27,7 +28,7 @@ export const dashboard = new Hono<AppEnv>().get(
       return c.json({ detail: [`from: the range can cover at most ${MAX_MONTHS} months`] }, 400);
 
     const db = c.var.db;
-    const params = { from, to };
+    const params = { from, to, ...viewerOf(c) };
     const all = (sql: string) => db.prepare(sql).all(usedBy(sql, params));
     const inRange = "substr(o.order_date, 1, 7) BETWEEN :from AND :to";
 
@@ -62,7 +63,7 @@ export const dashboard = new Hono<AppEnv>().get(
          GROUP BY s.product_id ORDER BY revenue_dollars DESC, s.product_id LIMIT 10`,
       ),
       by_employee: all(
-        `SELECT o.employee_id, trim(e.first_name || ' ' || e.last_name) AS name,
+        `SELECT o.employee_id, ${shownName("e")} AS name,
            round(sum(o.lines_total), 2) AS revenue_dollars, count(*) AS order_count
          FROM orders o JOIN employees e USING (employee_id) WHERE ${inRange}
          GROUP BY o.employee_id ORDER BY revenue_dollars DESC, o.employee_id`,

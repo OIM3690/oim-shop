@@ -136,7 +136,9 @@ function tooMany(c: Context, waitSeconds: number) {
 /**
  * A shared cache (Cloudflare, a proxy) may keep an anonymous read for a
  * minute. Anything that depends on who is signed in is private and never
- * stored, so one rep's page can never be served to someone else.
+ * stored, so one rep's page can never be served to someone else. An
+ * anonymous read varies by cookie: the same address answers differently
+ * once you sign in, so a browser must not reuse its signed-out copy.
  */
 function setCacheControl(c: Context<AppEnv>) {
   if (c.res.headers.has("Cache-Control")) return;
@@ -144,6 +146,7 @@ function setCacheControl(c: Context<AppEnv>) {
     c.var.user !== null || c.req.path.startsWith("/api/me") || c.req.path.startsWith("/api/auth");
   if (c.req.method === "GET" && c.res.status === 200 && !personal) {
     c.header("Cache-Control", "public, max-age=60");
+    c.header("Vary", "Cookie");
   } else {
     c.header("Cache-Control", personal ? "private, no-store" : "no-store");
   }

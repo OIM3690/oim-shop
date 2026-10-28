@@ -46,6 +46,13 @@ describe("caching", () => {
     expect((await app.request("/api/products")).headers.get("Cache-Control")).toBe("public, max-age=60");
   });
 
+  it("tells a cache that an anonymous read differs once you sign in", async () => {
+    // Without this, a browser that read a page signed out could reuse that
+    // copy for a minute after sign-in, without personal details or names.
+    const app = make({ perAddress: 1000, writesPerUser: 100 });
+    expect((await app.request("/api/employees/1")).headers.get("Vary")).toBe("Cookie");
+  });
+
   it("never lets a shared cache keep what depends on who is signed in", async () => {
     const app = make({ perAddress: 1000, writesPerUser: 100 });
     const { cookie } = await signIn(app, "alice");

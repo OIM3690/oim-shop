@@ -49,7 +49,7 @@ describe("upgrading a live database", () => {
     INSERT INTO users (user_id, github_id, created_at) VALUES (1, 9001, '2026-10-23T10:00:00');
     INSERT INTO sessions VALUES ('a-session-hash', 1, '2099-01-01T00:00:00Z');
     INSERT INTO employees (employee_id, first_name, last_name, title, reports_to, hire_date, user_id)
-      VALUES (10, 'Quillon', '', 'Sales Representative', 5, '2026-10-23', 1);
+      VALUES (10, 'Quillon', '', 'Sales Representative', 3, '2026-10-23', 1);
     INSERT INTO orders (order_id, customer_id, employee_id, order_date, required_date, shipper_id, freight,
         ship_city, ship_country, lines_total, line_count, entered_by_user)
       VALUES (1000000, 'ALFKI', 10, '2026-10-23T10:05:00', '2026-11-01T00:00:00', 1, 12.5, 'Berlin', 'Germany',
@@ -57,6 +57,22 @@ describe("upgrading a live database", () => {
     INSERT INTO order_lines VALUES (1000000, 1, 18, 5, 0);
     UPDATE products SET units_in_stock = units_in_stock - 5 WHERE product_id = 1;
   `);
+  // And an order sync brought in after the seed, which only the seed knows the address of.
+  const synced = Number(
+    one(
+      old,
+      "SELECT min(order_id) AS id FROM seed_orders WHERE order_id NOT IN (SELECT order_id FROM orders)",
+    ).id,
+  );
+  old
+    .prepare(
+      `INSERT INTO orders (order_id, customer_id, employee_id, order_date, required_date, shipper_id, freight,
+         ship_city, ship_country)
+       SELECT order_id, customer_id, employee_id, '2026-10-23T09:00:00', '2026-11-20T00:00:00', shipper_id,
+         freight, ship_city, ship_country
+       FROM seed_orders WHERE order_id = ?`,
+    )
+    .run(synced);
   const stockBefore = one(old, "SELECT units_in_stock FROM products WHERE product_id = 1").units_in_stock;
   const ordersBefore = one(old, "SELECT count(*) AS n FROM orders").n;
   old.close();
@@ -101,6 +117,14 @@ describe("upgrading a live database", () => {
     });
   });
 
+  it("gives an order sync brought in its full ship-to", () => {
+    const columns = "ship_name, ship_address, ship_region, ship_postal_code";
+    expect(one(db, `SELECT ${columns} FROM orders WHERE order_id = ?`, synced)).toEqual(
+      one(db, `SELECT ${columns} FROM seed_orders WHERE order_id = ?`, synced),
+    );
+    expect(one(db, "SELECT ship_name FROM orders WHERE order_id = ?", synced).ship_name).toBeTruthy();
+  });
+
   it("fills every new column as a fresh seed would", () => {
     expect(differing("categories", "category_id, picture")).toBe(0);
     expect(
@@ -126,7 +150,7 @@ describe("upgrading a live database", () => {
       differing(
         "orders",
         "order_id, ship_name, ship_address, ship_region, ship_postal_code",
-        "order_id < 1000000",
+        `order_id < 1000000 AND order_id <> ${synced}`,
       ),
     ).toBe(0);
     expect(differing("regions", "*")).toBe(0);

@@ -76,6 +76,12 @@ describe("a page number past the end", () => {
 });
 
 describe("the privacy page", () => {
+  it("says who sees a display name and what goes at the end of a term", async () => {
+    renderApp("/privacy");
+    expect(await screen.findByText(/shown only to you and to the managers/)).toBeInTheDocument();
+    expect(screen.getByText(/deletes every rep's account/)).toBeInTheDocument();
+  });
+
   it("explains the page counts when the server adds the Umami tag", async () => {
     const tag = document.createElement("script");
     tag.dataset.websiteId = "0b7f4c1e-0000-4000-8000-000000000000";

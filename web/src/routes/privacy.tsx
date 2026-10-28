@@ -15,13 +15,19 @@ function PrivacyPage() {
       <Card className="max-w-2xl">
         <CardContent className="space-y-4 leading-relaxed">
           <p>
-            Reading this site needs no account and stores nothing about you. Signing in is needed only to
-            enter orders.
+            Reading this site needs no account and stores nothing about you. Signing in is needed to enter
+            orders and to see the personal details of Northwind's employees, and only the GitHub accounts on
+            this server's list can sign in.
           </p>
           <p>
-            When you sign in with GitHub, the app asks GitHub for no permissions. It stores your numeric
-            GitHub user ID and the display name you choose, and nothing else: not your email, not your GitHub
-            username. Pages show only the display name.
+            When you sign in with GitHub, the app asks GitHub for no permissions. It checks your GitHub
+            username against the list and then forgets it. It stores your numeric GitHub user ID and the
+            display name you choose, and nothing else: not your email, not your GitHub username.
+          </p>
+          <p>
+            As a sales rep, your display name is shown only to you and to the managers. Everyone else sees you
+            as “Sales rep” and your employee number. A manager's display name is shown to everyone signed in;
+            visitors see “Sales manager” and the employee number.
           </p>
           <p>
             A cookie keeps you signed in for 30 days. It holds a random token, and the database holds only a
@@ -37,7 +43,9 @@ function PrivacyPage() {
           ) : null}
           <p>
             Every night, the orders entered here and all product stock go back to the Northwind data. Your
-            account and display name stay. Northwind Traders, its customers and its employees are fictional.
+            account and display name stay. When a term ends, the site deletes every rep's account, display
+            name and sessions; the managers' accounts stay. Northwind Traders, its customers and its employees
+            are fictional.
           </p>
         </CardContent>
       </Card>

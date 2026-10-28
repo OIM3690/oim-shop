@@ -16,6 +16,8 @@ const env = z
     CLIENT_IP_HEADER: z.string().default(""),
     GITHUB_CLIENT_ID: z.string().default(""),
     GITHUB_CLIENT_SECRET: z.string().default(""),
+    /** The allowlist: who may sign in, one GitHub login per line. Unset, anyone may sign in as a rep. */
+    ALLOWED_USERS_FILE: z.string().optional(),
     /** Both or neither: a self-hosted Umami's script and this site's ID there. Unset, nothing is counted. */
     UMAMI_SCRIPT_URL: z.url().optional(),
     UMAMI_WEBSITE_ID: z.uuid().optional(),
@@ -34,6 +36,7 @@ export const config = {
   webDist: env.WEB_DIST,
   clientIpHeader: env.CLIENT_IP_HEADER || undefined,
   github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET },
+  allowedUsersFile: env.ALLOWED_USERS_FILE || undefined,
   analytics:
     env.UMAMI_SCRIPT_URL && env.UMAMI_WEBSITE_ID
       ? { scriptUrl: env.UMAMI_SCRIPT_URL, websiteId: env.UMAMI_WEBSITE_ID }

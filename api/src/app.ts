@@ -20,6 +20,8 @@ export interface AppSettings {
   /** The address people open; sign-in returns here, and writes must come from it. */
   publicUrl: string;
   github: { clientId: string; clientSecret: string };
+  /** The allowlist file, read at every sign-in. Unset, anyone may sign in as a rep. */
+  allowedUsersFile?: string;
 }
 
 export interface Limits {
@@ -47,10 +49,15 @@ export function createApp({
   now,
   publicUrl = "http://localhost:5173",
   github,
+  allowedUsersFile,
   clientIpHeader,
   limits = { perAddress: 300, writesPerUser: 30 },
 }: AppOptions) {
-  const settings: AppSettings = { publicUrl, github: github ?? { clientId: "", clientSecret: "" } };
+  const settings: AppSettings = {
+    publicUrl,
+    github: github ?? { clientId: "", clientSecret: "" },
+    allowedUsersFile,
+  };
   const perAddress = new RateLimiter(limits.perAddress);
   const writesPerUser = new RateLimiter(limits.writesPerUser);
 

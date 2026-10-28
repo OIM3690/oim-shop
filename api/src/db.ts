@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { upgradeSeededDatabase } from "./northwind.ts";
+import { assignReporting } from "./reporting.ts";
 
 const MIGRATIONS = new URL("../../db/migrations/", import.meta.url);
 
@@ -10,6 +11,7 @@ export type Database = DatabaseSync;
 // files. It runs after the migration's SQL, in the same transaction.
 const AFTER_MIGRATION: Record<string, (db: Database) => void> = {
   "002-every-column.sql": upgradeSeededDatabase,
+  "003-roles.sql": assignReporting,
 };
 
 /**

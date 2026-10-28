@@ -45,9 +45,9 @@ export function closeApi() {
 /** The database behind the API, for tests that check what a page should show. */
 export const testDb = () => db;
 
-/** Signs in as a GitHub user; with a name, as a rep who has chosen it. */
-export function signInAs(githubId: number, displayName?: string) {
-  cookie = signInDirectly(db, githubId, displayName);
+/** Signs in as a GitHub user, a rep unless a manager; with a name, as one who has chosen it. */
+export function signInAs(githubId: number, displayName?: string, role: "rep" | "manager" = "rep") {
+  cookie = signInDirectly(db, githubId, displayName, role);
 }
 
 export const value = (sql: string, ...params: (string | number)[]) =>

@@ -14,7 +14,8 @@
     "build": "npm run build --workspace web",
     "seed": "npm run seed --workspace api",
     "sync": "npm run sync --workspace api",
-    "reset": "npm run reset --workspace api"
+    "reset": "npm run reset --workspace api",
+    "forget-accounts": "npm run forget-accounts --workspace api"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1"

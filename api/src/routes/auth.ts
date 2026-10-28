@@ -5,11 +5,16 @@ import { GitHub, generateState } from "arctic";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
+import { roleFor } from "../allowlist.ts";
 import type { AppEnv } from "../app.ts";
+import { transaction } from "../db.ts";
+import { assignReporting } from "../reporting.ts";
 import { endSession, startSession } from "../session.ts";
 
 const STATE_COOKIE = "oauth_state";
-const githubUser = z.object({ id: z.number().int().positive() });
+// GitHub's public profile. The login is checked against the allowlist and
+// then forgotten; only the id is stored.
+const githubUser = z.object({ id: z.number().int().positive(), login: z.string().min(1) });
 
 export const auth = new Hono<AppEnv>()
   .get("/github", (c) => {
@@ -36,14 +41,14 @@ export const auth = new Hono<AppEnv>()
       return c.json({ detail: "Sign-in could not be checked. Start again from the sign-in button." }, 400);
     }
 
-    let githubId: number;
+    let github: z.infer<typeof githubUser>;
     try {
       const tokens = await client(c.var.settings).validateAuthorizationCode(code);
       const response = await fetch("https://api.github.com/user", {
         headers: { Authorization: `Bearer ${tokens.accessToken()}`, "User-Agent": "oim-shop" },
       });
       if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
-      githubId = githubUser.parse(await response.json()).id;
+      github = githubUser.parse(await response.json());
     } catch {
       return c.json(
         { detail: "GitHub did not confirm the sign-in. Start again from the sign-in button." },
@@ -51,15 +56,32 @@ export const auth = new Hono<AppEnv>()
       );
     }
 
+    const role = roleFor(c.var.settings.allowedUsersFile, github.login);
+    if (!role) {
+      return c.json(
+        { detail: "This GitHub account is not on the list of people who may sign in here." },
+        403,
+      );
+    }
+
     const db = c.var.db;
-    db.prepare(
-      "INSERT INTO users (github_id, created_at) VALUES (?, ?) ON CONFLICT (github_id) DO NOTHING",
-    ).run(githubId, c.var.now());
-    const user = db
-      .prepare(
-        "SELECT u.user_id, e.employee_id FROM users u LEFT JOIN employees e USING (user_id) WHERE github_id = ?",
-      )
-      .get(githubId)!;
+    const user = transaction(db, () => {
+      db.prepare(
+        "INSERT INTO users (github_id, created_at) VALUES (?, ?) ON CONFLICT (github_id) DO NOTHING",
+      ).run(github.id, c.var.now());
+      // The allowlist may have changed since the last sign-in.
+      db.prepare(
+        `UPDATE users SET role = :role,
+           manager_since = CASE WHEN :role = 'manager' THEN coalesce(manager_since, :now) END
+         WHERE github_id = :github_id`,
+      ).run({ role, now: c.var.now(), github_id: github.id });
+      assignReporting(db);
+      return db
+        .prepare(
+          "SELECT u.user_id, e.employee_id FROM users u LEFT JOIN employees e USING (user_id) WHERE github_id = ?",
+        )
+        .get(github.id)!;
+    });
     startSession(c, db, Number(user.user_id), c.var.settings.publicUrl.startsWith("https://"));
     // A new rep first chooses the name other people will see.
     return c.redirect(`${c.var.settings.publicUrl}${user.employee_id === null ? "/welcome" : "/"}`);

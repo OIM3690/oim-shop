@@ -38,10 +38,10 @@ function WelcomePage() {
       />
     );
   }
-  return <NameForm current={me.data.employee?.name} />;
+  return <NameForm current={me.data.employee?.name} manager={me.data.role === "manager"} />;
 }
 
-function NameForm({ current }: { current: string | undefined }) {
+function NameForm({ current, manager }: { current: string | undefined; manager: boolean }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const form = useForm<z.infer<typeof schema>>({
@@ -72,7 +72,9 @@ function NameForm({ current }: { current: string | undefined }) {
         description={
           current
             ? "This name appears next to the orders you enter."
-            : "You are joining as a sales rep reporting to Steven Buchanan, the Sales Manager. Choose the name other people will see."
+            : manager
+              ? "You are joining as a sales manager, reporting to Andrew Fuller, Vice President, Sales. Choose the name people signed in here will see."
+              : "You are joining as a sales rep, reporting to the Sales Manager. Choose the name you and the managers will see."
         }
       />
       <Card className="max-w-lg">
@@ -105,7 +107,7 @@ function NameForm({ current }: { current: string | undefined }) {
               )}
             />
             <Button type="submit" disabled={save.isPending}>
-              {current ? "Save name" : "Start as a sales rep"}
+              {current ? "Save name" : manager ? "Start as a sales manager" : "Start as a sales rep"}
             </Button>
           </form>
         </CardContent>

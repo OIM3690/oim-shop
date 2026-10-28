@@ -4,6 +4,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import type { Role } from "./allowlist.ts";
 import type { Database } from "./db.ts";
 
 export const SESSION_COOKIE = "session";
@@ -14,6 +15,7 @@ const hash = (token: string) => createHash("sha256").update(token).digest("hex")
 export interface SessionUser {
   user_id: number;
   employee_id: number | null;
+  role: Role;
 }
 
 /** Stores a new session for the user and returns its token, which only the cookie will hold. */
@@ -38,7 +40,8 @@ export function readSession(c: Context, db: Database): SessionUser | null {
   if (!token) return null;
   const row = db
     .prepare(
-      `SELECT s.user_id, e.employee_id FROM sessions s LEFT JOIN employees e USING (user_id)
+      `SELECT s.user_id, e.employee_id, u.role FROM sessions s JOIN users u USING (user_id)
+         LEFT JOIN employees e USING (user_id)
        WHERE s.token_hash = ? AND s.expires_at > ?`,
     )
     .get(hash(token), new Date().toISOString());
@@ -46,6 +49,7 @@ export function readSession(c: Context, db: Database): SessionUser | null {
   return {
     user_id: Number(row.user_id),
     employee_id: row.employee_id === null ? null : Number(row.employee_id),
+    role: row.role === "manager" ? "manager" : "rep",
   };
 }
 

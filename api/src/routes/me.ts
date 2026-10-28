@@ -1,20 +1,21 @@
-// The signed-in rep. PUT /api/me sets the display name; the first time, it
-// also makes the rep's employee record, reporting to Steven Buchanan (5).
+// The signed-in person. PUT /api/me sets the display name; the first time,
+// it also makes their employee record, with the title and manager their
+// role gives them (api/src/reporting.ts).
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../app.ts";
 import { displayName } from "../schemas.ts";
 import { requireUser } from "../guards.ts";
+import { assignReporting } from "../reporting.ts";
 import { readEmployee } from "./employees.ts";
-
-const MANAGER = 5;
 
 export const me = new Hono<AppEnv>()
   .get("/", (c) => {
     const user = c.var.user;
     return c.json({
       signed_in: Boolean(user),
+      role: user?.role ?? null,
       employee: user?.employee_id ? readEmployee(c.var.db, user.employee_id) : null,
     });
   })
@@ -34,14 +35,16 @@ export const me = new Hono<AppEnv>()
           user.employee_id,
         );
       } else {
+        // The title and manager are placeholders until assignReporting sets them.
         db.prepare(
-          `INSERT INTO employees (employee_id, first_name, last_name, title, reports_to, hire_date, user_id)
-           VALUES ((SELECT max(max(employee_id) + 1, 10) FROM employees), ?, '', 'Sales Representative', ?, ?, ?)`,
-        ).run(display_name, MANAGER, c.var.now().slice(0, 10), user.user_id);
+          `INSERT INTO employees (employee_id, first_name, last_name, title, hire_date, user_id)
+           VALUES ((SELECT max(max(employee_id) + 1, 10) FROM employees), ?, '', 'Sales Representative', ?, ?)`,
+        ).run(display_name, c.var.now().slice(0, 10), user.user_id);
+        assignReporting(db);
       }
       const employeeId = Number(
         db.prepare("SELECT employee_id FROM employees WHERE user_id = ?").get(user.user_id)!.employee_id,
       );
-      return c.json({ signed_in: true, employee: readEmployee(db, employeeId) });
+      return c.json({ signed_in: true, role: user.role, employee: readEmployee(db, employeeId) });
     },
   );

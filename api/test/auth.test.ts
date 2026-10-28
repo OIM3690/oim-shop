@@ -37,7 +37,7 @@ describe("sign-in", () => {
     expect(callback.headers.get("Location")).toBe(`${ORIGIN}/welcome`);
     expect(cookie).toMatch(/^session=/);
     expect(db.prepare("SELECT * FROM users").all()).toEqual([
-      { user_id: 1, github_id: 1001, created_at: TEST_NOW },
+      { user_id: 1, github_id: 1001, created_at: TEST_NOW, role: "rep", manager_since: null },
     ]);
     const stored =
       JSON.stringify(db.prepare("SELECT * FROM users").all()) +
@@ -45,7 +45,7 @@ describe("sign-in", () => {
     expect(stored).not.toMatch(/alice|example\.com|token-/);
 
     const me = schemas.me.parse(await (await app.request("/api/me", as(cookie))).json());
-    expect(me).toEqual({ signed_in: true, employee: null });
+    expect(me).toEqual({ signed_in: true, role: "rep", employee: null });
   });
 
   it("says sign-in is not set up when the server has no OAuth App", async () => {
@@ -121,6 +121,7 @@ describe("sign-in", () => {
     expect((await app.request("/api/auth/logout", as(cookie, { method: "POST" }))).status).toBe(204);
     expect(await (await app.request("/api/me", as(cookie))).json()).toEqual({
       signed_in: false,
+      role: null,
       employee: null,
     });
   });

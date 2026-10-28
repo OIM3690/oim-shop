@@ -207,7 +207,10 @@ export const dashboard = z.object({
 
 export type Dashboard = z.infer<typeof dashboard>;
 
-export const me = z.object({ signed_in: z.boolean(), employee: employee.nullable() });
+export const role = z.enum(["rep", "manager"]);
+
+/** Who is signed in: their role from the allowlist, and their employee record once they have chosen a name. */
+export const me = z.object({ signed_in: z.boolean(), role: role.nullable(), employee: employee.nullable() });
 export type Me = z.infer<typeof me>;
 
 // What a rep sends. The server checks these, and the web app's forms check

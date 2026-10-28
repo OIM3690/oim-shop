@@ -93,6 +93,14 @@ describe("upgrading a live database", () => {
     );
   });
 
+  it("makes every existing account a rep who reports to Steven Buchanan", () => {
+    expect(one(db, "SELECT role FROM users WHERE user_id = 1").role).toBe("rep");
+    expect(one(db, "SELECT title, reports_to FROM employees WHERE employee_id = 10")).toEqual({
+      title: "Sales Representative",
+      reports_to: 5,
+    });
+  });
+
   it("fills every new column as a fresh seed would", () => {
     expect(differing("categories", "category_id, picture")).toBe(0);
     expect(

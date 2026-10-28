@@ -10,6 +10,7 @@ const server = startServer({
   now: () => bostonNow(),
   publicUrl: config.publicUrl,
   github: config.github,
+  allowedUsersFile: config.allowedUsersFile,
   clientIpHeader: config.clientIpHeader,
   port: config.port,
   host: config.host,

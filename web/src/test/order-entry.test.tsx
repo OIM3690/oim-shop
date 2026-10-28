@@ -63,6 +63,25 @@ describe("signing in", () => {
     await waitFor(() => expect(location().pathname).toBe("/orders/new"));
     expect(value("SELECT first_name FROM employees WHERE user_id IS NOT NULL")).toBe("Ana Ruiz");
   });
+
+  it("tells a new rep they report to the sales manager", async () => {
+    signInAs(3012);
+    renderApp("/welcome");
+    expect(
+      await screen.findByText(/joining as a sales rep, reporting to the Sales Manager/),
+    ).toBeInTheDocument();
+  });
+
+  it("tells a new manager they report to Andrew Fuller", async () => {
+    signInAs(3013, undefined, "manager");
+    renderApp("/welcome");
+    expect(
+      await screen.findByText(
+        /joining as a sales manager, reporting to Andrew Fuller, Vice President, Sales/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start as a sales manager" })).toBeInTheDocument();
+  });
 });
 
 describe("entering an order", () => {

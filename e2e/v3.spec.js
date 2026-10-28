@@ -30,7 +30,15 @@ test("the dashboard opens with this year's figures", async ({ page }) => {
 
 test("the sidebar reaches every section", async ({ page, isMobile }) => {
   await page.goto("./");
-  for (const name of ["Products", "Customers", "Orders", "Employees", "Dashboard"]) {
+  for (const name of [
+    "Products",
+    "Customers",
+    "Orders",
+    "Employees",
+    "Suppliers",
+    "Territories",
+    "Dashboard",
+  ]) {
     await openSection(page, isMobile, name);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(name === "Dashboard" ? "Sales dashboard" : name);
   }
@@ -47,7 +55,7 @@ test("a deep link opens the right page", async ({ page }) => {
   await page.goto("orders/10248");
   await expect(page.getByRole("heading", { name: "Order 10248" })).toBeVisible();
   await page.reload();
-  await expect(page.getByText("Vins et alcools Chevalier")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Vins et alcools Chevalier" })).toBeVisible();
 });
 
 test("sign in, choose a name, enter an order and cancel it", async ({ page, isMobile }, testInfo) => {

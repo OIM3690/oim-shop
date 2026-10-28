@@ -1,5 +1,5 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { Building2, Package, ReceiptText, Users } from "lucide-react";
+import { Building2, Factory, Package, ReceiptText, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +17,7 @@ const sections = [
   { to: "/customers", label: "Customers", icon: Building2 },
   { to: "/orders", label: "Orders", icon: ReceiptText },
   { to: "/employees", label: "Employees", icon: Users },
+  { to: "/suppliers", label: "Suppliers", icon: Factory },
 ] as const;
 
 export function AppSidebar() {

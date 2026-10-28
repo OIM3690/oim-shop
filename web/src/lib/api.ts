@@ -38,9 +38,31 @@ const customer = z.object({
   customer_id: z.string(),
   company_name: z.string(),
   contact_name: z.string(),
+  contact_title: z.string().nullable(),
+  address: z.string().nullable(),
   // Two customers in the source data have no city or country.
   city: z.string().nullable(),
+  region: z.string().nullable(),
+  postal_code: z.string().nullable(),
   country: z.string().nullable(),
+  phone: z.string().nullable(),
+  fax: z.string().nullable(),
+});
+
+const supplier = z.object({
+  supplier_id: z.number(),
+  company_name: z.string(),
+  contact_name: z.string().nullable(),
+  contact_title: z.string().nullable(),
+  address: z.string().nullable(),
+  city: z.string().nullable(),
+  region: z.string().nullable(),
+  postal_code: z.string().nullable(),
+  country: z.string().nullable(),
+  phone: z.string().nullable(),
+  fax: z.string().nullable(),
+  /** A web address, or null. */
+  home_page: z.string().nullable(),
 });
 
 const employee = z.object({
@@ -85,6 +107,7 @@ const order = orderSummary.extend({ lines: z.array(orderLine) });
 export type Category = z.infer<typeof category>;
 export type Product = z.infer<typeof product>;
 export type Customer = z.infer<typeof customer>;
+export type Supplier = z.infer<typeof supplier>;
 export type Employee = z.infer<typeof employee>;
 export type OrderSummary = z.infer<typeof orderSummary>;
 export type Order = z.infer<typeof order>;
@@ -129,6 +152,10 @@ export interface CustomerQuery {
   country?: string;
   page: number;
 }
+export interface SupplierQuery {
+  name?: string;
+  page: number;
+}
 
 export interface OrderQuery {
   customer_id?: string;
@@ -157,6 +184,11 @@ export const api = {
 
   customer: (id: string, signal?: AbortSignal) =>
     get(`/customers/${encodeURIComponent(id)}`, customer, {}, signal),
+
+  suppliers: (query: SupplierQuery, signal?: AbortSignal) =>
+    get("/suppliers", pageOf(supplier), { ...query, per_page: PER_PAGE }, signal),
+
+  supplier: (id: number, signal?: AbortSignal) => get(`/suppliers/${id}`, supplier, {}, signal),
 
   employees: (signal?: AbortSignal) => get("/employees", z.array(employee), {}, signal),
 

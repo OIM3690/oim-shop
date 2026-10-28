@@ -2,7 +2,7 @@
 // productsQuery({...}) and react-query caches the answer under its key, so two
 // pages that need the same data share one request.
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
-import { api, type CustomerQuery, type OrderQuery, type ProductQuery } from "./api";
+import { api, type CustomerQuery, type OrderQuery, type ProductQuery, type SupplierQuery } from "./api";
 
 // Lists that rarely change are kept for an hour; everything else for a minute.
 const HOUR = 60 * 60 * 1000;
@@ -56,3 +56,13 @@ export const ordersQuery = (query: OrderQuery) =>
 
 export const orderQuery = (id: number) =>
   queryOptions({ queryKey: ["order", id], queryFn: ({ signal }) => api.order(id, signal) });
+
+export const suppliersQuery = (query: SupplierQuery) =>
+  queryOptions({
+    queryKey: ["suppliers", query],
+    queryFn: ({ signal }) => api.suppliers(query, signal),
+    placeholderData: keepPreviousData,
+  });
+
+export const supplierQuery = (id: number) =>
+  queryOptions({ queryKey: ["supplier", id], queryFn: ({ signal }) => api.supplier(id, signal) });

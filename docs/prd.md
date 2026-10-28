@@ -53,6 +53,9 @@ A React interface with the product's list and detail pages. It still has no serv
 - **Customers**: list with search by company name and a country filter; detail with the customer's orders.
 - **Orders**: list with filters for customer, employee, country and date range; detail with the order's lines and totals.
 - **Employees**: list, the reporting hierarchy, and each employee's orders with their count.
+- **Suppliers** (from `v2.1`): list with search by company name; detail with the supplier's contact, address, phone, fax and home page. Customers' pages also show the contact's title, the address, phone and fax.
+
+From `v2.1`, GitHub Pages also serves `v1` beside `v2`, at `/oim-shop/v1/`.
 
 Every list uses the API's `page` and `per_page` and shows the total count, so you can page through all results. Lists keep the order the API returns, with the newest order first. The browser never adds up orders itself, so revenue figures and the dashboard wait for `v3`, where the app holds every order line.
 

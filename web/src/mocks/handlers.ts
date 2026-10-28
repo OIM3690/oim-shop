@@ -8,9 +8,10 @@ import customers from "./data/customers.json";
 import employees from "./data/employees.json";
 import orders from "./data/orders.json";
 import products from "./data/products.json";
+import suppliers from "./data/suppliers.json";
 
 export const API = "https://oim.zhili.dev/shop";
-export const data = { categories, customers, employees, orders, products };
+export const data = { categories, customers, employees, orders, products, suppliers };
 
 function paginate<T>(items: T[], params: URLSearchParams) {
   const page = Number(params.get("page") ?? 1);
@@ -68,6 +69,22 @@ export const handlers = [
   http.get(`${API}/customers/:id`, ({ params }) => {
     const customer = customers.find((c) => c.customer_id === String(params.id).toUpperCase());
     return customer ? HttpResponse.json(customer) : notFound(`customer ${params.id}`);
+  }),
+
+  http.get(`${API}/suppliers`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const country = params.get("country");
+    const matches = suppliers.filter(
+      (s) =>
+        contains(s.company_name, params.get("name")) &&
+        (!country || s.country.toLowerCase() === country.toLowerCase()),
+    );
+    return HttpResponse.json(paginate(matches, params));
+  }),
+
+  http.get(`${API}/suppliers/:id`, ({ params }) => {
+    const supplier = suppliers.find((s) => String(s.supplier_id) === params.id);
+    return supplier ? HttpResponse.json(supplier) : notFound(`supplier ${params.id}`);
   }),
 
   http.get(`${API}/employees`, () => HttpResponse.json(employees)),

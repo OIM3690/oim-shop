@@ -13,7 +13,7 @@ test("the sidebar reaches every section", async ({ page, isMobile }) => {
   await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
   await expect(page.getByText("1–25 of 77")).toBeVisible();
 
-  for (const name of ["Customers", "Orders", "Employees"]) {
+  for (const name of ["Customers", "Orders", "Employees", "Suppliers"]) {
     await openSection(page, isMobile, name);
     await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   }

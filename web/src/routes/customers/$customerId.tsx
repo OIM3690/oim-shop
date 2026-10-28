@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
+import { Address, NameAndTitle } from "@/components/address";
 import { BackLink, DetailCard, DetailLoading } from "@/components/detail";
 import { OrderList } from "@/components/order-list";
 import { PageHeader } from "@/components/page-header";
@@ -50,9 +51,10 @@ function CustomerPage() {
       <DetailCard
         items={[
           { label: "Customer ID", value: c.customer_id },
-          { label: "Contact", value: c.contact_name },
-          { label: "City", value: c.city ?? "Not recorded" },
-          { label: "Country", value: c.country ?? "Not recorded" },
+          { label: "Contact", value: <NameAndTitle name={c.contact_name} title={c.contact_title} /> },
+          { label: "Address", value: <Address {...c} /> },
+          { label: "Phone", value: c.phone ?? "Not recorded" },
+          { label: "Fax", value: c.fax ?? "Not recorded" },
         ]}
       />
       <section className="space-y-4">

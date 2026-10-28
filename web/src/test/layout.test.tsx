@@ -94,3 +94,18 @@ describe("the privacy page", () => {
     expect(screen.queryByText(/Umami/)).not.toBeInTheDocument();
   });
 });
+
+describe("the earlier versions", () => {
+  it("links v1 and v2 where they run on GitHub Pages", async () => {
+    renderApp("/products");
+    const versions = await screen.findByRole("navigation", { name: "Earlier versions" });
+    expect(within(versions).getByRole("link", { name: /v1/ })).toHaveAttribute(
+      "href",
+      "https://oim3690.github.io/oim-shop/v1/",
+    );
+    expect(within(versions).getByRole("link", { name: /v2/ })).toHaveAttribute(
+      "href",
+      "https://oim3690.github.io/oim-shop/",
+    );
+  });
+});

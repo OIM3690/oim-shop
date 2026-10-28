@@ -24,6 +24,12 @@ const sections = [
   { to: "/employees", label: "Employees", icon: Users, exact: false },
 ] as const;
 
+// v1 and v2 read oim-api from the browser, so GitHub Pages runs them as they were tagged.
+const earlierVersions = [
+  { label: "v1, one HTML file", href: "https://oim3690.github.io/oim-shop/v1/" },
+  { label: "v2, React without a server", href: "https://oim3690.github.io/oim-shop/" },
+];
+
 export function AppSidebar() {
   const matchRoute = useMatchRoute();
   // On a phone the menu covers the page, so choosing a section closes it.
@@ -62,6 +68,17 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <Account />
+        <nav aria-label="Earlier versions" className="text-muted-foreground px-2 pb-1 text-xs">
+          Earlier versions:{" "}
+          {earlierVersions.map(({ label, href }, i) => (
+            <span key={label}>
+              {i > 0 ? ", " : null}
+              <a href={href} className="hover:text-foreground underline underline-offset-2">
+                {label}
+              </a>
+            </span>
+          ))}
+        </nav>
       </SidebarFooter>
     </Sidebar>
   );

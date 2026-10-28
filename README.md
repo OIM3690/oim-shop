@@ -6,15 +6,15 @@ The internal sales system of Northwind Traders, a fictional food wholesaler, bui
 
 The product grows in tagged versions on one history. Open the version that matches what you already know, then read the comparison to see what the next version adds.
 
-| Version | What it adds | Read the code | What changed |
-| --- | --- | --- | --- |
-| `v1` | One HTML file that calls a public API with `fetch` | [`/tree/v1`](https://github.com/OIM3690/oim-shop/tree/v1) | |
-| `v2` | A React and TypeScript interface for products, customers, orders and employees, still reading the API directly | [`/tree/v2`](https://github.com/OIM3690/oim-shop/tree/v2) | [`v1...v2`](https://github.com/OIM3690/oim-shop/compare/v1...v2) |
-| `v3` | Its own server and SQLite database, a sales dashboard, GitHub sign-in and order entry | [`/tree/v3`](https://github.com/OIM3690/oim-shop/tree/v3) | [`v2...v3`](https://github.com/OIM3690/oim-shop/compare/v2...v3) |
+| Version | What it adds | Try it | Read the code | What changed |
+| --- | --- | --- | --- | --- |
+| `v1` | One HTML file that calls a public API with `fetch` | [GitHub Pages](https://oim3690.github.io/oim-shop/v1/) | [`/tree/v1`](https://github.com/OIM3690/oim-shop/tree/v1) | |
+| `v2` | A React and TypeScript interface for products, customers, orders and employees, still reading the API directly | [GitHub Pages](https://oim3690.github.io/oim-shop/) | [`/tree/v2`](https://github.com/OIM3690/oim-shop/tree/v2) | [`v1...v2`](https://github.com/OIM3690/oim-shop/compare/v1...v2) |
+| `v3` | Its own server and SQLite database, a sales dashboard, GitHub sign-in and order entry | [oim-shop-js.zhili.dev](https://oim-shop-js.zhili.dev/) | [`/tree/v3`](https://github.com/OIM3690/oim-shop/tree/v3) | [`v2...v3`](https://github.com/OIM3690/oim-shop/compare/v2...v3) |
 
 The plan for all versions is in [`docs/prd.md`](docs/prd.md).
 
-The live copy of `v3` is at <https://oim-shop-js.zhili.dev/>, and `v2` stays at <https://oim3690.github.io/oim-shop/>. Orders that signed-in visitors enter on the live site are removed every night.
+Orders entered on the live site are removed every night. The live site links to the earlier versions from the bottom of its menu.
 
 ## Run v1
 

@@ -29,7 +29,7 @@ When you sign in (from `v3`), you join Northwind as a sales rep or a sales manag
 | Sales manager | An account the allowlist marks as a manager (`v3.3`) | Everything a rep can do, plus see every rep's chosen name |
 | Northwind employee | The nine employees in the source data | Appear in orders and reports; cannot sign in |
 
-From `v3.3`, only the GitHub accounts on an allowlist, a file kept on the server, can sign in; the repository holds the mechanism and never the list. A line in the file can mark an account as a manager, and no page manages roles. The server reads the file at every sign-in, so a change, such as making a manager a rep, takes effect at the person's next sign-in.
+From `v3.3`, only the GitHub accounts on an allowlist, a file kept on the server, can sign in; the repository holds the mechanism and never the list. A line in the file can mark an account as a manager, and no page manages roles. The server reads the file at every sign-in, so a change, such as making a manager a rep, takes effect at the person's next sign-in. Removing someone from the list stops their next sign-in, but a session they already have lasts until it expires (30 days) or the end-of-term cleanup runs. An account made before `v3.3` is a rep until its next sign-in reads the list.
 
 A rep reports to the first manager who signed in, or to Steven Buchanan, the Sales Manager (employee 5), until one has. A manager reports to Andrew Fuller, Vice President, Sales (employee 2). When the first manager signs in, the reps who signed in before move to that manager.
 
@@ -203,7 +203,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 ## Security and privacy
 
 - Reading is public and needs no sign-in. In `v1` and `v2` every request goes to `oim-api`, which applies its own limits. From `v3`, protection against bots comes from caching and limits: anonymous GET responses are cached at the edge for a minute, `per_page` is capped, unbounded queries are refused, each client address has a rate limit, and `robots.txt` asks crawlers to stay out of the API.
-- A request that carries a session cookie skips the cache, and every response that depends on who is signed in is sent with `Cache-Control: private, no-store`. A rep therefore sees a new order at once; a visitor sees it when the cached copy expires.
+- A request that carries a session cookie skips the cache, and every response that depends on who is signed in is sent with `Cache-Control: private, no-store`. From `v3.3`, an anonymous response also carries `Vary: Cookie`, so a browser does not reuse a copy it read signed out. A rep therefore sees a new order at once; a visitor sees it when the cached copy expires.
 - Sign-in is needed to write and to read Northwind employees' personal details. It goes through a GitHub OAuth App that requests no scopes. From `v3.3`, the server checks the GitHub username against the allowlist and then forgets it. The app stores the GitHub user ID and the display name you choose. It never stores your email, and no page shows your GitHub username.
 - The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`; every write checks the request's origin; writes have a rate limit per user and length limits on every text field.
 - Secrets live in `.env` on your machine and in the server's environment file in production. The repository has `.env.example` only. Development and production use separate OAuth apps.

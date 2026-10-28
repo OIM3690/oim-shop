@@ -25,6 +25,14 @@ async function setup() {
 const stock = (db: ReturnType<typeof freshDb>, productId: number) =>
   Number(one(db, "SELECT units_in_stock AS s FROM products WHERE product_id = ?", productId).s);
 
+const shipTo = (db: ReturnType<typeof freshDb>, orderId: number) =>
+  one(
+    db,
+    `SELECT ship_name, ship_address, ship_city, ship_region, ship_postal_code, ship_country
+     FROM orders WHERE order_id = ?`,
+    orderId,
+  );
+
 // Chai (1) and Chang (2) are on sale; Alice Mutton (17) is discontinued.
 const valid = {
   customer_id: "ALFKI",
@@ -79,6 +87,19 @@ describe("entering an order", () => {
     expect(after.totals.order_count - before.totals.order_count).toBe(1);
     expect(Math.round((customerAfter.revenue_dollars - customerBefore.revenue_dollars) * 100)).toBe(26550);
     expect(after.by_employee.find((e) => e.name === "Ana")?.revenue_dollars).toBe(265.5);
+  });
+
+  it("ships to the customer's name and full address", async () => {
+    const { db, app, alice } = await setup();
+    const order = schemas.order.parse((await place(app, alice)).json);
+    expect(shipTo(db, order.order_id)).toEqual({
+      ship_name: "Alfreds Futterkiste",
+      ship_address: "Obere Str. 57",
+      ship_city: "Berlin",
+      ship_region: "Western Europe",
+      ship_postal_code: "12209",
+      ship_country: "Germany",
+    });
   });
 
   it("needs a signed-in rep with a display name", async () => {
@@ -184,6 +205,23 @@ describe("changing an order", () => {
     expect(
       (await app.request(`/api/orders/${placed.order_id}`, as(alice, { method: "PUT", json: body }))).status,
     ).toBe(200);
+  });
+
+  it("ships an edited order to its new customer", async () => {
+    const { db, app, alice } = await setup();
+    const placed = schemas.order.parse((await place(app, alice)).json);
+    await app.request(
+      `/api/orders/${placed.order_id}`,
+      as(alice, { method: "PUT", json: { ...valid, customer_id: "bonap" } }),
+    );
+    expect(shipTo(db, placed.order_id)).toEqual({
+      ship_name: "Bon app'",
+      ship_address: "12, rue des Bouchers",
+      ship_city: "Marseille",
+      ship_region: "Western Europe",
+      ship_postal_code: "13008",
+      ship_country: "France",
+    });
   });
 
   it("cancels an unshipped order and returns its stock", async () => {

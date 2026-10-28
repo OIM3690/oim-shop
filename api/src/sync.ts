@@ -90,6 +90,13 @@ export async function syncOrders(
       shipper_id, freight, ship_city, ship_country)
     VALUES (:order_id, :customer_id, :employee_id, :order_date, :required_date, :shipped_date,
       :shipper_id, :freight, :ship_city, :ship_country)`);
+  // oim-api sends only the city and country an order ships to. The seed holds
+  // every Northwind order, including those not placed yet, so it has the rest.
+  const fillShipTo = db.prepare(
+    `UPDATE orders SET ship_name = s.ship_name, ship_address = s.ship_address, ship_region = s.ship_region,
+       ship_postal_code = s.ship_postal_code
+     FROM seed_orders s WHERE s.order_id = orders.order_id AND orders.order_id = ?`,
+  );
   const insertLine = db.prepare(
     "INSERT INTO order_lines (order_id, product_id, unit_price, quantity, discount) VALUES (?, ?, ?, ?, ?)",
   );
@@ -121,6 +128,7 @@ export async function syncOrders(
         ship_city: order.ship_city,
         ship_country: order.ship_country,
       });
+      fillShipTo.run(order.order_id);
       for (const line of order.lines) {
         insertLine.run(
           order.order_id,

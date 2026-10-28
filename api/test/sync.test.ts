@@ -45,6 +45,18 @@ describe("sync", () => {
     }
   });
 
+  it("gives a new order the full ship-to that oim-api does not send", async () => {
+    const db = freshDb();
+    server.use(...fakeOimApi(db, { now: LATER, shiftDays: TEST_SHIFT_DAYS }));
+    const [first] = placedBetween(db, TEST_NOW, LATER);
+    await run(db);
+    const columns = "ship_name, ship_address, ship_city, ship_region, ship_postal_code, ship_country";
+    expect(one(db, `SELECT ${columns} FROM orders WHERE order_id = ?`, first!)).toEqual(
+      one(db, `SELECT ${columns} FROM seed_orders WHERE order_id = ?`, first!),
+    );
+    expect(one(db, "SELECT ship_name FROM orders WHERE order_id = ?", first!).ship_name).toBeTruthy();
+  });
+
   it("keeps the dashboard rollup equal to the order lines", async () => {
     const db = freshDb();
     server.use(...fakeOimApi(db, { now: LATER, shiftDays: TEST_SHIFT_DAYS }));

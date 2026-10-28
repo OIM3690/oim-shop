@@ -95,10 +95,23 @@ function releaseLines(db: Database, orderId: number) {
   db.prepare("DELETE FROM order_lines WHERE order_id = ?").run(orderId);
 }
 
+/** The customer an order is for, with the name and address it ships to. */
 function customerRow(db: Database, customerId: string) {
-  return db.prepare(`SELECT customer_id, city, country FROM customers c WHERE ${SAME_CUSTOMER}`).get({
-    customer_id: customerId,
-  })!;
+  const row = db
+    .prepare(
+      `SELECT customer_id, company_name, address, city, region, postal_code, country
+       FROM customers c WHERE ${SAME_CUSTOMER}`,
+    )
+    .get({ customer_id: customerId })!;
+  return {
+    customer_id: String(row.customer_id),
+    ship_name: String(row.company_name),
+    ship_address: row.address as string | null,
+    ship_city: row.city as string | null,
+    ship_region: row.region as string | null,
+    ship_postal_code: row.postal_code as string | null,
+    ship_country: row.country as string | null,
+  };
 }
 
 /**
@@ -138,20 +151,19 @@ export const orderEntry = new Hono<AppEnv>()
         const id = Math.max(next, FIRST_ENTERED_ID);
         db.prepare(
           `INSERT INTO orders (order_id, customer_id, employee_id, order_date, required_date, shipper_id, freight,
-             ship_city, ship_country, entered_by_user)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ).run(
-          id,
-          String(customer.customer_id),
-          c.var.user!.employee_id!,
-          now,
-          `${input.required_date}T00:00:00`,
-          input.shipper_id,
-          input.freight,
-          customer.city,
-          customer.country,
-          c.var.user!.user_id,
-        );
+             ship_name, ship_address, ship_city, ship_region, ship_postal_code, ship_country, entered_by_user)
+           VALUES (:order_id, :customer_id, :employee_id, :order_date, :required_date, :shipper_id, :freight,
+             :ship_name, :ship_address, :ship_city, :ship_region, :ship_postal_code, :ship_country, :user_id)`,
+        ).run({
+          ...customer,
+          order_id: id,
+          employee_id: c.var.user!.employee_id!,
+          order_date: now,
+          required_date: `${input.required_date}T00:00:00`,
+          shipper_id: input.shipper_id,
+          freight: input.freight,
+          user_id: c.var.user!.user_id,
+        });
         writeLines(db, id, lines);
         refreshOrderTotals(db, [id]);
         refreshProductMonthSales(db, monthsOf(db, [id]));
@@ -173,17 +185,17 @@ export const orderEntry = new Hono<AppEnv>()
         const lines = checkAgainstCatalog(db, input, c.var.now().slice(0, 10));
         const customer = customerRow(db, input.customer_id);
         db.prepare(
-          `UPDATE orders SET customer_id = ?, required_date = ?, shipper_id = ?, freight = ?, ship_city = ?,
-             ship_country = ? WHERE order_id = ?`,
-        ).run(
-          String(customer.customer_id),
-          `${input.required_date}T00:00:00`,
-          input.shipper_id,
-          input.freight,
-          customer.city,
-          customer.country,
-          own.orderId,
-        );
+          `UPDATE orders SET customer_id = :customer_id, required_date = :required_date, shipper_id = :shipper_id,
+             freight = :freight, ship_name = :ship_name, ship_address = :ship_address, ship_city = :ship_city,
+             ship_region = :ship_region, ship_postal_code = :ship_postal_code, ship_country = :ship_country
+           WHERE order_id = :order_id`,
+        ).run({
+          ...customer,
+          required_date: `${input.required_date}T00:00:00`,
+          shipper_id: input.shipper_id,
+          freight: input.freight,
+          order_id: own.orderId,
+        });
         writeLines(db, own.orderId, lines);
         refreshOrderTotals(db, [own.orderId]);
         refreshProductMonthSales(db, monthsOf(db, [own.orderId]));

@@ -10,6 +10,14 @@
 # - put `[Service]` and `MemoryMax=<limit>` in a systemd drop-in,
 #   ~/.config/systemd/user/oim-shop-js.service.d/local.conf (and the same for
 #   oim-shop-js-sync.service and oim-shop-js-reset.service).
+#
+# The allowlist (who may sign in, one GitHub username per line, "manager"
+# after a username for a manager) lives in ~/.config/oim-shop-js/allowlist/,
+# a folder mounted read-only, with ALLOWED_USERS_FILE=/allowlist/allowed-users
+# in the environment file. The folder is mounted rather than the file, so an
+# edit that replaces the file still reaches the app at the next sign-in.
+# At the end of a term, run
+# `podman exec oim-shop-js node api/src/cli/forget-accounts.ts`.
 [Unit]
 Description=oim-shop, the Northwind sales system for OIM3690
 After=network-online.target
@@ -18,6 +26,7 @@ After=network-online.target
 Image=ghcr.io/oim3690/oim-shop:latest
 ContainerName=oim-shop-js
 Volume=oim-shop-js-data:/data
+Volume=%h/.config/oim-shop-js/allowlist:/allowlist:ro
 EnvironmentFile=%h/.config/oim-shop-js/oim-shop-js.env
 
 [Service]

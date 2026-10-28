@@ -34,8 +34,11 @@ Then open `http://localhost:5173/`. The first run fills `api/shop.db` from the N
 - `api/` is the server: [Hono](https://hono.dev) on Node, with SQLite as the database (Node's built-in `node:sqlite`). The schema is plain SQL in `db/migrations/`.
 - `web/` is the interface: React, TypeScript, TanStack Router and Query, Tailwind CSS and shadcn/ui. Its types come from the server's schemas in `api/src/schemas.ts`.
 - `npm run sync` pulls new orders from the course API; `npm run reset` removes the orders entered in the app and puts stock back. On the live server, timers run them every hour and every night.
+- `npm run forget-accounts` is the end-of-term cleanup: it deletes every rep's account and every entered order, and keeps the managers.
 
 Signing in needs a GitHub OAuth App of your own. Copy `.env.example` to `api/.env` and fill in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`, with the callback URL `http://localhost:5173/api/auth/github/callback`. Everything else works without it.
+
+Without an allowlist, anyone can sign in to your copy as a sales rep. To choose who can sign in, write a file with one GitHub username per line, add the word `manager` after a username to make that person a manager, and set `ALLOWED_USERS_FILE` in `api/.env` to the file's path. The server reads the file at every sign-in.
 
 ## Run the tests
 

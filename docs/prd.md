@@ -1,6 +1,6 @@
 # oim-shop Product Requirements
 
-Status: agreed on 2026-10-22; `v1`, `v2` and `v3` are released. Anything marked **Pending** is a proposal I have not decided yet.
+Status: agreed on 2026-10-22; `v1`, `v2` and `v3` are released, and `v3.3` adds every column of the Northwind data, an allowlist and a manager. Anything marked **Pending** is a proposal I have not decided yet.
 
 ## Purpose
 
@@ -20,15 +20,18 @@ The repository holds no course material: no roster, no keys, no assignment answe
 
 Northwind sells to 93 customer companies in 21 countries. Its employees enter orders on the customers' behalf, and every historical order records the employee who entered it. The product is the tool those employees use: look up a product, review a customer's history, enter an order, and see how sales are going.
 
-When you sign in (from `v3`), you become a new sales rep at Northwind. You report to Steven Buchanan, the Sales Manager (employee 5), and you enter orders for customer companies. Nobody buys anything for themselves, so there is no cart and no checkout.
+When you sign in (from `v3`), you join Northwind as a sales rep or a sales manager and enter orders for customer companies. Nobody buys anything for themselves, so there is no cart and no checkout.
 
 | Role | Who | What they can do |
 | --- | --- | --- |
-| Visitor | Anyone, signed out | Read every page |
-| Sales rep | Anyone signed in with GitHub (`v3`) | Everything a visitor can do, plus enter orders and change their own |
+| Visitor | Anyone, signed out | Read every page, without Northwind employees' personal details |
+| Sales rep | A GitHub account on the allowlist (`v3`) | Everything a visitor can do, plus enter orders and change their own, see Northwind employees' personal details, and see the managers' chosen names |
+| Sales manager | An account the allowlist marks as a manager (`v3.3`) | Everything a rep can do, plus see every rep's chosen name |
 | Northwind employee | The nine employees in the source data | Appear in orders and reports; cannot sign in |
 
-There is no admin role.
+From `v3.3`, only the GitHub accounts on an allowlist, a file kept on the server, can sign in; the repository holds the mechanism and never the list. A line in the file can mark an account as a manager, and no page manages roles. The server reads the file at every sign-in, so a change, such as making a manager a rep, takes effect at the person's next sign-in.
+
+A rep reports to the first manager who signed in, or to Steven Buchanan, the Sales Manager (employee 5), until one has. A manager reports to Andrew Fuller, Vice President, Sales (employee 2). When the first manager signs in, the reps who signed in before move to that manager.
 
 ## Out of scope
 
@@ -68,13 +71,35 @@ The app gets its own server, database and API, and every page switches from `oim
 - **Low stock**: a flag on any product whose stock is below its reorder level, a field the seed has and `oim-api` does not serve.
 - **Sync**: a scheduled job that pulls new orders and their lines from `oim-api`.
 - `GET /api/health` reports whether the database answers and when the last sync ran.
-- **Sign in with GitHub.** On first sign-in you choose a display name and get a new employee record that reports to employee 5.
+- **Sign in with GitHub.** On first sign-in you choose a display name and get a new employee record, which reports to the manager your role gives you.
 - **New order**: choose a customer, add product lines (quantity and discount), choose a shipper, a required date and the freight. The server writes the order, its lines and the stock change together, or writes nothing.
 - **My orders**: list your orders; edit or cancel one that has not shipped; mark one as shipped.
 - An order you enter appears at once on the dashboard, in the customer's history and in your own sales.
-- **Privacy page**: what is stored about you, and that entered orders are reset every night.
+- **Privacy page**: what is stored about you, who sees your display name, that entered orders are reset every night, and that rep accounts are deleted at the end of a term.
 
-Acceptance: a test computes each dashboard figure independently from the seed and compares it with the API; every order rule below has a test that fails when the rule is removed; a failed write leaves no partial order; a rep cannot change another rep's order through the API, which a test checks by calling the API directly.
+### Every column, at its level (v3.3)
+
+The site shows every table and column of the Northwind data, except the two empty tables (`CustomerDemographics`, `CustomerCustomerDemo`), the stored queries, and the employees' `PhotoPath`, an address on a network that no longer exists. The photos themselves are kept.
+
+| Who sees it | What |
+| --- | --- |
+| Everyone | Customers' and suppliers' contact name and title, address, region, postal code, phone and fax; suppliers' home pages; a **Suppliers** list and page with each supplier's products; shippers' phones; category pictures; products' units on order; orders' full ship-to (name, address, city, region, postal code, country); a **Territories** page with the regions, their territories and who covers each; each employee's territories and title of courtesy |
+| Signed in | Northwind employees' birth dates (on the shifted clock), home addresses, regions, postal codes, home phones, extensions, notes and photos; the managers' chosen names |
+| Managers | Every rep's chosen name |
+
+The people are fictional, but a real sales system would keep personal details from the public in the same way, so the server leaves them out of a visitor's response. Hiding them in the browser would not be enough, because the response would still carry them.
+
+A rep's chosen name is seen only by that rep and the managers; every other page shows the rep as "Sales rep" and their employee number. A manager's chosen name is seen by everyone signed in; visitors see "Sales manager" and the employee number. The server gives each viewer the name they may see, in the response and in the order a list is sorted by.
+
+A supplier's home page is stored as an Access hyperlink, `text#address#`. The site keeps only an address that starts with `http`; the others point into the Access database itself.
+
+An order entered in the app ships to its customer's name and full address.
+
+A database that is already live gains the new columns and data on its next start, without a reload, and keeps its accounts, display names, sessions, entered orders and stock. A test builds a database at the previous schema version and upgrades it.
+
+`npm run forget-accounts` is the end-of-term cleanup. It deletes every rep's account, display name, sessions and employee record, and every order entered in the app, and returns stock to the seed. Managers keep their accounts, so the next term's reps report to the same manager.
+
+Acceptance: a test computes each dashboard figure independently from the seed and compares it with the API; every order rule below has a test that fails when the rule is removed; a failed write leaves no partial order; a rep cannot change another rep's order through the API, which a test checks by calling the API directly; a test reads every page of the API as a visitor, a rep and a manager and finds no name or personal detail that viewer may not see.
 
 ## Order rules
 
@@ -104,6 +129,7 @@ The order list carries totals and `employee_id` but no lines. Reading every orde
 ### Seed and sync (v3)
 
 - The seed keeps the source dates unchanged. Loading it applies the shift from `/shop` (`clock_shift_days`) and keeps only the orders placed by the time of loading.
+- The seed holds every Northwind order, including those not placed yet. Sync takes an order's ship name, address, region and postal code from it, because `oim-api` sends only the city and country.
 - Sync reads orders by date, because order IDs in this data do not follow date order. Each run reads the order list from 40 days before the newest stored order, fetches the lines of any order it does not have yet, and updates the shipped date of orders it already has. An order ships at most 37 days after it is placed, so the window catches every shipment. Orders are matched by order ID, so a repeated run changes nothing.
 - About four new orders arrive per day, so an hourly sync is enough. A run makes a few requests, far below `oim-api`'s limit of 300 requests a minute.
 - Orders entered in `v3` use IDs from 1,000,000 upward, far above the Northwind range (10248 to 26529), so a synced order can never collide with an entered one.
@@ -116,6 +142,7 @@ These come from the source data. The app shows them as they are and explains the
 - Two customer companies are named `IT` and have no city or country. One of them has the ID `Val2 `, with a space at the end; `oim-api` matches IDs ignoring case and surrounding spaces.
 - Some orders have many lines: up to 77, one for every product.
 - The source has 21 orders that never shipped, so their shipped date stays empty.
+- Four territories have no employee assigned, and one territory is named `Georgetow`.
 
 ### Simplifications
 
@@ -177,7 +204,7 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 
 - Reading is public and needs no sign-in. In `v1` and `v2` every request goes to `oim-api`, which applies its own limits. From `v3`, protection against bots comes from caching and limits: anonymous GET responses are cached at the edge for a minute, `per_page` is capped, unbounded queries are refused, each client address has a rate limit, and `robots.txt` asks crawlers to stay out of the API.
 - A request that carries a session cookie skips the cache, and every response that depends on who is signed in is sent with `Cache-Control: private, no-store`. A rep therefore sees a new order at once; a visitor sees it when the cached copy expires.
-- Sign-in is used only for writing. It goes through a GitHub OAuth App that requests no scopes. The app stores the GitHub user ID and the display name you choose. It never stores your email, and no page shows your GitHub username.
+- Sign-in is needed to write and to read Northwind employees' personal details. It goes through a GitHub OAuth App that requests no scopes. From `v3.3`, the server checks the GitHub username against the allowlist and then forgets it. The app stores the GitHub user ID and the display name you choose. It never stores your email, and no page shows your GitHub username.
 - The session cookie is `HttpOnly`, `Secure` and `SameSite=Lax`; every write checks the request's origin; writes have a rate limit per user and length limits on every text field.
 - Secrets live in `.env` on your machine and in the server's environment file in production. The repository has `.env.example` only. Development and production use separate OAuth apps.
 - From `v3.1` the server writes an access log: method, path, status and time for each request, with no query string and no client address.
@@ -202,10 +229,11 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 
 - `v3` is live at `https://oim-shop-js.zhili.dev`. Cloudflare sits in front of it, and the server accepts connections from Cloudflare only, so rate limits count each visitor's own address.
 - Sign-in on the live site uses a GitHub OAuth App owned by the `OIM3690` organization. Running the app on your own machine needs an App of your own, as the README explains.
-- `v2` stays on GitHub Pages at `https://oim3690.github.io/oim-shop/`, deployed from its tag. Its build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app there.
+- `v2` stays on GitHub Pages at `https://oim3690.github.io/oim-shop/`, deployed from its tag, with `v1` beside it at `/v1/` from `v2.1`. The README's version table links each version where it runs, and the live site links the earlier versions from the bottom of its menu. Its build also writes `404.html`, a copy of `index.html`, so a deep link such as `/orders/10248` opens the app there.
 - From `v3`, GitHub Actions builds the container image (`linux/amd64`), starts it once to check it, and pushes it to `ghcr.io/oim3690/oim-shop`; the server pulls it, and nothing is built there. The app applies its migrations when it starts, and seeds an empty database on its first start.
+- The allowlist is a file on the server, in a folder the container reads; its path is in `ALLOWED_USERS_FILE`.
 - On the server, rootless podman runs the image from the Quadlet files in `deploy/`; sync and reset are one-shot containers started by systemd timers, so they hold memory only while they run. The published port and the memory limits are set on the server and kept out of the repository.
 
 ## Open items
 
-- None at the `v3` release.
+- `v2.1` puts `v1` on GitHub Pages at `https://oim3690.github.io/oim-shop/v1/` and adds a Suppliers list and page and customers' contacts to `v2`, read from `oim-api`. A supplier's page lists its products once `oim-api`'s `/shop/products` takes a supplier filter, so the browser never filters a page of products itself.

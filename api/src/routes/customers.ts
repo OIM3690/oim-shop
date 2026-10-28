@@ -4,7 +4,8 @@ import { notFound, pageQuery, paginate, query, sortQuery, textQuery } from "../h
 import * as schemas from "../schemas.ts";
 
 const SELECT = `
-  c.customer_id, c.company_name, c.contact_name, c.city, c.country,
+  c.customer_id, c.company_name, c.contact_name, c.contact_title, c.address, c.city, c.region, c.postal_code,
+  c.country, c.phone, c.fax,
   coalesce(t.order_count, 0) AS order_count, coalesce(t.revenue, 0) AS revenue_dollars`;
 
 const FROM = `

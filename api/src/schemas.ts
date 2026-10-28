@@ -17,17 +17,19 @@ export const pageOf = <T extends z.ZodType>(item: T) => z.object({ items: z.arra
 
 export const category = z.object({ category_id: z.number(), name: z.string(), description: z.string() });
 
-export const shipper = z.object({ shipper_id: z.number(), name: z.string() });
+export const shipper = z.object({ shipper_id: z.number(), name: z.string(), phone: z.string().nullable() });
 
 export const product = z.object({
   product_id: z.number(),
   name: z.string(),
   category_id: z.number(),
   category: z.string(),
+  supplier_id: z.number(),
   supplier: z.string(),
   quantity_per_unit: z.string(),
   unit_price_dollars: z.number(),
   units_in_stock: z.number(),
+  units_on_order: z.number(),
   reorder_level: z.number(),
   low_stock: z.boolean(),
   discontinued: z.boolean(),
@@ -38,10 +40,33 @@ export const customer = z.object({
   customer_id: z.string(),
   company_name: z.string(),
   contact_name: z.string(),
+  contact_title: z.string().nullable(),
+  address: z.string().nullable(),
   city: z.string().nullable(),
+  region: z.string().nullable(),
+  postal_code: z.string().nullable(),
   country: z.string().nullable(),
+  phone: z.string().nullable(),
+  fax: z.string().nullable(),
   order_count: z.number(),
   revenue_dollars: z.number(),
+});
+
+export const supplier = z.object({
+  supplier_id: z.number(),
+  name: z.string(),
+  contact_name: z.string().nullable(),
+  contact_title: z.string().nullable(),
+  address: z.string().nullable(),
+  city: z.string().nullable(),
+  region: z.string().nullable(),
+  postal_code: z.string().nullable(),
+  country: z.string().nullable(),
+  phone: z.string().nullable(),
+  fax: z.string().nullable(),
+  /** A web address, or null. */
+  home_page: z.string().nullable(),
+  product_count: z.number(),
 });
 
 export const employee = z.object({
@@ -52,6 +77,7 @@ export const employee = z.object({
   title: z.string(),
   reports_to: z.number().nullable(),
   manager_name: z.string().nullable(),
+  title_of_courtesy: z.string().nullable(),
   hire_date: z.string(),
   city: z.string().nullable(),
   country: z.string().nullable(),
@@ -59,6 +85,26 @@ export const employee = z.object({
   order_count: z.number(),
   revenue_dollars: z.number(),
 });
+
+/** One employee's page: the list's fields and the territories they cover. */
+export const employeeDetail = employee.extend({
+  territories: z.array(z.object({ territory_id: z.string(), name: z.string(), region: z.string() })),
+});
+
+/** Every region, its territories, and the employees who cover each one. */
+export const regions = z.array(
+  z.object({
+    region_id: z.number(),
+    name: z.string(),
+    territories: z.array(
+      z.object({
+        territory_id: z.string(),
+        name: z.string(),
+        employees: z.array(z.object({ employee_id: z.number(), name: z.string() })),
+      }),
+    ),
+  }),
+);
 
 /** Everyone's name and manager, for the reporting lines and the employee menus. */
 export const directory = z.array(
@@ -79,7 +125,12 @@ export const orderSummary = z.object({
   shipped_date: z.string().nullable(),
   shipper_id: z.number(),
   shipper: z.string(),
+  shipper_phone: z.string().nullable(),
+  ship_name: z.string().nullable(),
+  ship_address: z.string().nullable(),
   ship_city: z.string().nullable(),
+  ship_region: z.string().nullable(),
+  ship_postal_code: z.string().nullable(),
   ship_country: z.string().nullable(),
   freight_dollars: z.number(),
   line_count: z.number(),
@@ -111,7 +162,10 @@ export type Category = z.infer<typeof category>;
 export type Shipper = z.infer<typeof shipper>;
 export type Product = z.infer<typeof product>;
 export type Customer = z.infer<typeof customer>;
+export type Supplier = z.infer<typeof supplier>;
 export type Employee = z.infer<typeof employee>;
+export type EmployeeDetail = z.infer<typeof employeeDetail>;
+export type Regions = z.infer<typeof regions>;
 export type Directory = z.infer<typeof directory>;
 export type OrderSummary = z.infer<typeof orderSummary>;
 export type OrderLine = z.infer<typeof orderLine>;

@@ -2,6 +2,7 @@ import { getConnInfo } from "@hono/node-server/conninfo";
 import { Hono, type Context } from "hono";
 import type { Database } from "./db.ts";
 import { sameOriginWrites } from "./guards.ts";
+import { notFound } from "./http.ts";
 import { auth } from "./routes/auth.ts";
 import { customers } from "./routes/customers.ts";
 import { dashboard } from "./routes/dashboard.ts";
@@ -10,6 +11,8 @@ import { me } from "./routes/me.ts";
 import { myOrders, orderEntry } from "./routes/order-entry.ts";
 import { orders } from "./routes/orders.ts";
 import { products } from "./routes/products.ts";
+import { regions } from "./routes/regions.ts";
+import { suppliers } from "./routes/suppliers.ts";
 import { RateLimiter } from "./limits.ts";
 import { readSession, type SessionUser } from "./session.ts";
 
@@ -84,9 +87,18 @@ export function createApp({
     .get("/categories", (c) =>
       c.json(db.prepare("SELECT category_id, name, description FROM categories ORDER BY category_id").all()),
     )
+    .get("/categories/:id{[0-9]+}/picture", (c) => {
+      const row = db
+        .prepare("SELECT picture FROM categories WHERE category_id = ?")
+        .get(Number(c.req.param("id")));
+      if (!row?.picture) return c.json(notFound(`picture for category ${c.req.param("id")}`), 404);
+      return c.body(row.picture as Uint8Array<ArrayBuffer>, 200, { "Content-Type": "image/jpeg" });
+    })
     .get("/shippers", (c) =>
-      c.json(db.prepare("SELECT shipper_id, name FROM shippers ORDER BY shipper_id").all()),
+      c.json(db.prepare("SELECT shipper_id, name, phone FROM shippers ORDER BY shipper_id").all()),
     )
+    .route("/suppliers", suppliers)
+    .route("/regions", regions)
     .route("/products", products)
     .route("/customers", customers)
     .route("/orders", orders)

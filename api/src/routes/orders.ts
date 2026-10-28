@@ -7,7 +7,8 @@ import { SAME_CUSTOMER } from "./customers.ts";
 
 export const ORDER_SELECT = `
   o.order_id, o.customer_id, c.company_name AS customer_name, o.order_date, o.required_date, o.shipped_date,
-  o.shipper_id, s.name AS shipper, o.ship_city, o.ship_country, o.freight AS freight_dollars, o.line_count,
+  o.shipper_id, s.name AS shipper, s.phone AS shipper_phone, o.ship_name, o.ship_address, o.ship_city,
+  o.ship_region, o.ship_postal_code, o.ship_country, o.freight AS freight_dollars, o.line_count,
   o.lines_total AS order_total_dollars, o.employee_id, trim(e.first_name || ' ' || e.last_name) AS employee_name,
   o.entered_by_user IS NOT NULL AS entered`;
 

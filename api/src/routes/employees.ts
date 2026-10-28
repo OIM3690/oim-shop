@@ -9,7 +9,7 @@ export const MAX_DIRECTORY = 1000;
 const NAME = (alias: string) => `trim(${alias}.first_name || ' ' || ${alias}.last_name)`;
 
 const SELECT = `
-  e.employee_id, e.first_name, e.last_name, ${NAME("e")} AS name, e.title,
+  e.employee_id, e.first_name, e.last_name, ${NAME("e")} AS name, e.title, e.title_of_courtesy,
   e.reports_to, ${NAME("m")} AS manager_name, e.hire_date, e.city, e.country,
   e.user_id IS NOT NULL AS is_rep,
   coalesce(t.order_count, 0) AS order_count, coalesce(t.revenue, 0) AS revenue_dollars`;
@@ -71,6 +71,15 @@ export const employees = new Hono<AppEnv>()
     ),
   )
   .get("/:id{[0-9]+}", (c) => {
-    const found = readEmployee(c.var.db, Number(c.req.param("id")));
-    return found ? c.json(found) : c.json(notFound(`employee ${c.req.param("id")}`), 404);
+    const id = Number(c.req.param("id"));
+    const found = readEmployee(c.var.db, id);
+    if (!found) return c.json(notFound(`employee ${id}`), 404);
+    const territories = c.var.db
+      .prepare(
+        `SELECT t.territory_id, t.name, r.name AS region
+         FROM employee_territories et JOIN territories t USING (territory_id) JOIN regions r USING (region_id)
+         WHERE et.employee_id = ? ORDER BY t.territory_id`,
+      )
+      .all(id);
+    return c.json(schemas.employeeDetail.parse({ ...found, territories }));
   });

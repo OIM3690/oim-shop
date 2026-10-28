@@ -5,8 +5,8 @@ import { bool, notFound, pageQuery, paginate, query, sortQuery, textQuery } from
 import * as schemas from "../schemas.ts";
 
 const SELECT = `
-  p.product_id, p.name, p.category_id, c.name AS category, s.name AS supplier, p.quantity_per_unit,
-  p.unit_price AS unit_price_dollars, p.units_in_stock, p.reorder_level,
+  p.product_id, p.name, p.category_id, c.name AS category, p.supplier_id, s.name AS supplier,
+  p.quantity_per_unit, p.unit_price AS unit_price_dollars, p.units_in_stock, p.units_on_order, p.reorder_level,
   p.units_in_stock < p.reorder_level AS low_stock, p.discontinued,
   coalesce(r.revenue, 0) AS revenue_dollars`;
 
@@ -27,6 +27,7 @@ export const products = new Hono<AppEnv>()
       ...pageQuery,
       name: textQuery,
       category: z.coerce.number().int().positive().optional(),
+      supplier: z.coerce.number().int().positive().optional(),
       sort: sortQuery(
         {
           product_id: "p.product_id",
@@ -43,11 +44,12 @@ export const products = new Hono<AppEnv>()
       const where: string[] = [];
       if (q.name) where.push("instr(fold(p.name), fold(:name)) > 0");
       if (q.category) where.push("p.category_id = :category");
+      if (q.supplier) where.push("p.supplier_id = :supplier");
       const page = paginate(
         c.var.db,
         // product_id breaks ties, so a page never repeats or skips a row.
         { select: SELECT, from: FROM, where, orderBy: `${q.sort}, p.product_id` },
-        { name: q.name ?? null, category: q.category ?? null },
+        { name: q.name ?? null, category: q.category ?? null, supplier: q.supplier ?? null },
         q.page,
         q.per_page,
         toProduct,

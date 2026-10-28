@@ -5,8 +5,12 @@
 //
 // Dates are written as the source has them, normalized to YYYY-MM-DDTHH:MM:SS.
 // The app moves them onto oim-api's shifted clock when it loads the seed.
-// Employees keep only the fields oim-api serves: no birth date, address,
-// phone, photo or notes, even though the people are fictional.
+// Every table and column is kept except the two empty tables
+// (CustomerDemographics, CustomerCustomerDemo), the stored queries, and the
+// employees' PhotoPath, an address on a network that no longer exists. The
+// photos and category pictures themselves are JPEG files, kept as blobs.
+// Employees' personal details are fictional; the app shows them only to
+// people who are signed in.
 import { createHash } from "node:crypto";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -36,18 +40,32 @@ const isoDate = (column: string) =>
 const tables: { name: string; columns: string[]; select: string }[] = [
   {
     name: "categories",
-    columns: ["category_id", "name", "description"],
-    select: "SELECT CategoryID, CategoryName, Description FROM Categories ORDER BY 1",
+    columns: ["category_id", "name", "description", "picture"],
+    select: "SELECT CategoryID, CategoryName, Description, Picture FROM Categories ORDER BY 1",
   },
   {
     name: "suppliers",
-    columns: ["supplier_id", "name"],
-    select: "SELECT SupplierID, CompanyName FROM Suppliers ORDER BY 1",
+    columns: [
+      "supplier_id",
+      "name",
+      "contact_name",
+      "contact_title",
+      "address",
+      "city",
+      "region",
+      "postal_code",
+      "country",
+      "phone",
+      "fax",
+      "home_page",
+    ],
+    select: `SELECT SupplierID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode,
+      Country, Phone, Fax, HomePage FROM Suppliers ORDER BY 1`,
   },
   {
     name: "shippers",
-    columns: ["shipper_id", "name"],
-    select: "SELECT ShipperID, CompanyName FROM Shippers ORDER BY 1",
+    columns: ["shipper_id", "name", "phone"],
+    select: "SELECT ShipperID, CompanyName, Phone FROM Shippers ORDER BY 1",
   },
   {
     name: "products",
@@ -59,21 +77,54 @@ const tables: { name: string; columns: string[]; select: string }[] = [
       "quantity_per_unit",
       "unit_price",
       "units_in_stock",
+      "units_on_order",
       "reorder_level",
       "discontinued",
     ],
     select: `SELECT ProductID, ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice,
-      UnitsInStock, ReorderLevel, CAST(Discontinued AS INTEGER) FROM Products ORDER BY 1`,
+      UnitsInStock, UnitsOnOrder, ReorderLevel, CAST(Discontinued AS INTEGER) FROM Products ORDER BY 1`,
   },
   {
     name: "customers",
-    columns: ["customer_id", "company_name", "contact_name", "city", "country"],
-    select: "SELECT CustomerID, CompanyName, ContactName, City, Country FROM Customers ORDER BY 1",
+    columns: [
+      "customer_id",
+      "company_name",
+      "contact_name",
+      "contact_title",
+      "address",
+      "city",
+      "region",
+      "postal_code",
+      "country",
+      "phone",
+      "fax",
+    ],
+    select: `SELECT CustomerID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode,
+      Country, Phone, Fax FROM Customers ORDER BY 1`,
   },
   {
     name: "employees",
-    columns: ["employee_id", "first_name", "last_name", "title", "reports_to", "hire_date", "city", "country"],
-    select: `SELECT EmployeeID, FirstName, LastName, Title, ReportsTo, substr(HireDate, 1, 10), City, Country
+    columns: [
+      "employee_id",
+      "first_name",
+      "last_name",
+      "title",
+      "title_of_courtesy",
+      "reports_to",
+      "birth_date",
+      "hire_date",
+      "address",
+      "city",
+      "region",
+      "postal_code",
+      "country",
+      "home_phone",
+      "extension",
+      "photo",
+      "notes",
+    ],
+    select: `SELECT EmployeeID, FirstName, LastName, Title, TitleOfCourtesy, ReportsTo, substr(BirthDate, 1, 10),
+      substr(HireDate, 1, 10), Address, City, Region, PostalCode, Country, HomePhone, Extension, Photo, Notes
       FROM Employees ORDER BY 1`,
   },
   {
@@ -87,28 +138,51 @@ const tables: { name: string; columns: string[]; select: string }[] = [
       "shipped_date",
       "shipper_id",
       "freight",
+      "ship_name",
+      "ship_address",
       "ship_city",
+      "ship_region",
+      "ship_postal_code",
       "ship_country",
     ],
     select: `SELECT OrderID, CustomerID, EmployeeID, ${isoDate("OrderDate")}, ${isoDate("RequiredDate")},
-      ${isoDate("ShippedDate")}, ShipVia, Freight, ShipCity, ShipCountry FROM Orders ORDER BY 1`,
+      ${isoDate("ShippedDate")}, ShipVia, Freight, ShipName, ShipAddress, ShipCity, ShipRegion, ShipPostalCode,
+      ShipCountry FROM Orders ORDER BY 1`,
   },
   {
     name: "order_lines",
     columns: ["order_id", "product_id", "unit_price", "quantity", "discount"],
     select: `SELECT OrderID, ProductID, UnitPrice, Quantity, Discount FROM "Order Details" ORDER BY 1, 2`,
   },
+  {
+    name: "regions",
+    columns: ["region_id", "name"],
+    select: "SELECT RegionID, RegionDescription FROM Regions ORDER BY 1",
+  },
+  {
+    name: "territories",
+    columns: ["territory_id", "name", "region_id"],
+    select: "SELECT TerritoryID, TerritoryDescription, RegionID FROM Territories ORDER BY 1",
+  },
+  {
+    name: "employee_territories",
+    columns: ["employee_id", "territory_id"],
+    select: "SELECT EmployeeID, TerritoryID FROM EmployeeTerritories ORDER BY 1, 2",
+  },
 ];
 
 const literal = (value: unknown) => {
   if (value === null) return "NULL";
   if (typeof value === "number" || typeof value === "bigint") return String(value);
+  if (value instanceof Uint8Array) return `X'${Buffer.from(value).toString("hex")}'`;
   return `'${String(value).replaceAll("'", "''")}'`;
 };
 
 for (const table of tables) {
   const rows = source.prepare(table.select).all();
-  const lines = [`-- ${table.name}: ${rows.length} rows from Northwind (jpwhite3/northwind-SQLite3 ${COMMIT.slice(0, 7)})`];
+  const lines = [
+    `-- ${table.name}: ${rows.length} rows from Northwind (jpwhite3/northwind-SQLite3 ${COMMIT.slice(0, 7)})`,
+  ];
   for (let i = 0; i < rows.length; i += ROWS_PER_INSERT) {
     const values = rows
       .slice(i, i + ROWS_PER_INSERT)

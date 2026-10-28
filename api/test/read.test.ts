@@ -203,6 +203,13 @@ describe("health", () => {
   });
 });
 
+describe("the category list", () => {
+  it("sends names and descriptions, not the pictures' bytes", async () => {
+    const { body } = await get("/api/categories");
+    expect(Object.keys(body[0]).sort()).toEqual(["category_id", "description", "name"]);
+  });
+});
+
 describe("every response matches its schema", () => {
   it.each([
     ["/api/products?per_page=100", schemas.pageOf(schemas.product)],

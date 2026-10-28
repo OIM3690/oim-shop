@@ -1,9 +1,16 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { upgradeSeededDatabase } from "./northwind.ts";
 
 const MIGRATIONS = new URL("../../db/migrations/", import.meta.url);
 
 export type Database = DatabaseSync;
+
+// Work a migration needs that SQL alone cannot do, such as reading the seed
+// files. It runs after the migration's SQL, in the same transaction.
+const AFTER_MIGRATION: Record<string, (db: Database) => void> = {
+  "002-every-column.sql": upgradeSeededDatabase,
+};
 
 /**
  * Opens the SQLite file and applies any migration it has not seen yet. A copy
@@ -36,6 +43,7 @@ function migrate(db: Database) {
     if (applied.has(name)) continue;
     transaction(db, () => {
       db.exec(readFileSync(new URL(name, MIGRATIONS), "utf8"));
+      AFTER_MIGRATION[name]?.(db);
       db.prepare("INSERT INTO schema_migrations (name, applied_at) VALUES (?, ?)").run(
         name,
         new Date().toISOString(),

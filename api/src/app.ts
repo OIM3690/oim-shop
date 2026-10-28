@@ -81,8 +81,12 @@ export function createApp({
         last_sync: lastSync ? String(lastSync.value) : null,
       });
     })
-    .get("/categories", (c) => c.json(db.prepare("SELECT * FROM categories ORDER BY category_id").all()))
-    .get("/shippers", (c) => c.json(db.prepare("SELECT * FROM shippers ORDER BY shipper_id").all()))
+    .get("/categories", (c) =>
+      c.json(db.prepare("SELECT category_id, name, description FROM categories ORDER BY category_id").all()),
+    )
+    .get("/shippers", (c) =>
+      c.json(db.prepare("SELECT shipper_id, name FROM shippers ORDER BY shipper_id").all()),
+    )
     .route("/products", products)
     .route("/customers", customers)
     .route("/orders", orders)

@@ -86,9 +86,29 @@ export const employee = z.object({
   revenue_dollars: z.number(),
 });
 
-/** One employee's page: the list's fields and the territories they cover. */
+/**
+ * A Northwind employee's personal details, sent only to people signed in.
+ * The people are fictional, but a real sales system would keep these from
+ * the public too. A rep's are all empty.
+ */
+export const personal = z.object({
+  birth_date: z.string().nullable(),
+  address: z.string().nullable(),
+  region: z.string().nullable(),
+  postal_code: z.string().nullable(),
+  home_phone: z.string().nullable(),
+  extension: z.string().nullable(),
+  notes: z.string().nullable(),
+  has_photo: z.boolean(),
+});
+
+/**
+ * One employee's page: the list's fields, the territories they cover, and,
+ * for someone signed in, their personal details (null for a visitor).
+ */
 export const employeeDetail = employee.extend({
   territories: z.array(z.object({ territory_id: z.string(), name: z.string(), region: z.string() })),
+  personal: personal.nullable(),
 });
 
 /** Every region, its territories, and the employees who cover each one. */

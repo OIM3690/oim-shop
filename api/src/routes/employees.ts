@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../app.ts";
+import { requireUser } from "../guards.ts";
 import { bool, notFound, pageQuery, paginate, query, sortQuery } from "../http.ts";
 import * as schemas from "../schemas.ts";
 
@@ -81,5 +82,29 @@ export const employees = new Hono<AppEnv>()
          WHERE et.employee_id = ? ORDER BY t.territory_id`,
       )
       .all(id);
-    return c.json(schemas.employeeDetail.parse({ ...found, territories }));
+    // Personal details are read only for someone signed in, so a visitor's
+    // response never holds them, and that response may be cached.
+    const personal = c.var.user
+      ? c.var.db
+          .prepare(
+            `SELECT birth_date, address, region, postal_code, home_phone, extension, notes,
+               photo IS NOT NULL AS has_photo
+             FROM employees WHERE employee_id = ?`,
+          )
+          .get(id)
+      : undefined;
+    return c.json(
+      schemas.employeeDetail.parse({
+        ...found,
+        territories,
+        personal: personal ? { ...personal, has_photo: bool(personal.has_photo) } : null,
+      }),
+    );
+  })
+  .get("/:id{[0-9]+}/photo", requireUser, (c) => {
+    const row = c.var.db
+      .prepare("SELECT photo FROM employees WHERE employee_id = ?")
+      .get(Number(c.req.param("id")));
+    if (!row?.photo) return c.json(notFound(`photo of employee ${c.req.param("id")}`), 404);
+    return c.body(row.photo as Uint8Array<ArrayBuffer>, 200, { "Content-Type": "image/jpeg" });
   });

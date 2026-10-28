@@ -26,41 +26,44 @@ function TerritoriesPage() {
         regions.data.map((region) => (
           <section key={region.region_id} className="space-y-3">
             <h2 className="text-lg font-semibold">{region.name}</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Territory</TableHead>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Covered by</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {region.territories.map((t) => (
-                  <TableRow key={t.territory_id}>
-                    <TableCell className="font-medium">{t.name}</TableCell>
-                    <TableCell className="tabular-nums">{t.territory_id}</TableCell>
-                    <TableCell className="whitespace-normal">
-                      {t.employees.length === 0 ? (
-                        <span className="text-muted-foreground">No one</span>
-                      ) : (
-                        t.employees.map((e, i) => (
-                          <span key={e.employee_id}>
-                            {i > 0 ? ", " : null}
-                            <Link
-                              to="/employees/$employeeId"
-                              params={{ employeeId: String(e.employee_id) }}
-                              className="text-primary hover:underline"
-                            >
-                              {e.name}
-                            </Link>
-                          </span>
-                        ))
-                      )}
-                    </TableCell>
+            {/* Framed like the data tables on the other pages. */}
+            <div className="overflow-hidden rounded-lg border">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Territory</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Covered by</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {region.territories.map((t) => (
+                    <TableRow key={t.territory_id}>
+                      <TableCell className="font-medium">{t.name}</TableCell>
+                      <TableCell className="tabular-nums">{t.territory_id}</TableCell>
+                      <TableCell className="whitespace-normal">
+                        {t.employees.length === 0 ? (
+                          <span className="text-muted-foreground">No one</span>
+                        ) : (
+                          t.employees.map((e, i) => (
+                            <span key={e.employee_id}>
+                              {i > 0 ? ", " : null}
+                              <Link
+                                to="/employees/$employeeId"
+                                params={{ employeeId: String(e.employee_id) }}
+                                className="text-primary hover:underline"
+                              >
+                                {e.name}
+                              </Link>
+                            </span>
+                          ))
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </section>
         ))
       )}

@@ -23,7 +23,7 @@ export function DetailCard({ items }: { items: { label: string; value: ReactNode
       <CardContent>
         <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
           {items.map(({ label, value }) => (
-            <div key={label} className="grid gap-1">
+            <div key={label} className="grid content-start gap-1">
               <dt className="text-muted-foreground text-sm">{label}</dt>
               <dd className="tabular-nums wrap-anywhere">{value}</dd>
             </div>

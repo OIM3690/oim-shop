@@ -17,7 +17,7 @@ export function Address({
   const lines = [
     name,
     address,
-    [postal_code, city].filter(Boolean).join(" "),
+    [city, postal_code].filter(Boolean).join(" "),
     [region, country].filter(Boolean).join(", "),
   ].filter(Boolean);
   if (lines.length === 0) return <span className="text-muted-foreground">Not recorded</span>;

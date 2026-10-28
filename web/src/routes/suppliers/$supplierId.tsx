@@ -64,7 +64,18 @@ function SupplierPage() {
       <DetailCard
         items={[
           { label: "Contact", value: <NameAndTitle name={s.contact_name} title={s.contact_title} /> },
-          { label: "Address", value: <Address {...s} /> },
+          {
+            label: "Address",
+            value: (
+              <Address
+                address={s.address}
+                city={s.city}
+                region={s.region}
+                postal_code={s.postal_code}
+                country={s.country}
+              />
+            ),
+          },
           { label: "Phone", value: s.phone ?? notRecorded },
           { label: "Fax", value: s.fax ?? notRecorded },
           {

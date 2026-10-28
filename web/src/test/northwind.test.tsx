@@ -67,7 +67,7 @@ describe("an order's page", () => {
     const shipTo = (await screen.findByText("Ship to")).nextElementSibling!;
     expect(shipTo).toHaveTextContent("Vins et alcools Chevalier");
     expect(shipTo).toHaveTextContent("59 rue de l-Abbaye");
-    expect(shipTo).toHaveTextContent("51100 Reims");
+    expect(shipTo).toHaveTextContent("Reims 51100");
     expect(shipTo).toHaveTextContent("France");
     expect(screen.getByText("Shipper").nextElementSibling).toHaveTextContent("Federal Shipping");
     expect(screen.getByText("Shipper").nextElementSibling).toHaveTextContent("(503) 555-9931");

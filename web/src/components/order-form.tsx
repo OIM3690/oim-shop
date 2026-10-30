@@ -276,7 +276,7 @@ function LoadedOrderForm({
             <h2>Products</h2>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="@container/order-lines space-y-4">
           {lines.fields.map((line, i) => {
             const product = byId.get(Number(watched?.[i]?.product_id));
             const available = product
@@ -285,7 +285,7 @@ function LoadedOrderForm({
             return (
               <fieldset
                 key={line.id}
-                className="grid items-start gap-3 border-b pb-4 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_7rem_auto]"
+                className="grid items-start gap-3 border-b pb-4 @2xl/order-lines:grid-cols-[minmax(0,1fr)_7rem_7rem_7rem_auto]"
               >
                 <legend className="sr-only">Line {i + 1}</legend>
                 <Controller
@@ -375,7 +375,7 @@ function LoadedOrderForm({
                   <span className="text-sm font-medium">Line total</span>
                   <span className="py-1.5 tabular-nums">{formatMoney(lineTotal(i))}</span>
                 </div>
-                <div className="sm:pt-6">
+                <div className="@2xl/order-lines:pt-6">
                   <Button
                     type="button"
                     variant="ghost"

@@ -70,6 +70,26 @@ test("sign in, choose a name, enter an order and cancel it", async ({ page, isMo
   await page.getByRole("button", { name: "Start as a sales rep" }).click();
 
   await expect(page.getByRole("heading", { name: "New order" })).toBeVisible();
+  const viewport = page.viewportSize();
+  for (const colorScheme of ["light", "dark"]) {
+    await page.emulateMedia({ colorScheme });
+    for (const width of isMobile ? [320, 390] : [640, 768, 820, 1024, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const product = page.getByLabel("Product", { exact: true });
+      await expect
+        .poll(() => product.evaluate((element) => element.getBoundingClientRect().width))
+        .toBeGreaterThanOrEqual(160);
+      const productBox = await product.boundingBox();
+      const quantityBox = await page.getByLabel("Quantity").boundingBox();
+      expect(
+        productBox.x + productBox.width <= quantityBox.x ||
+        productBox.y + productBox.height <= quantityBox.y,
+      ).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  }
+  await page.setViewportSize(viewport);
+  await page.emulateMedia({ colorScheme: null });
   await page.getByLabel("Customer").selectOption({ label: "Alfreds Futterkiste" });
   await page.getByLabel("Product").selectOption({ label: "Chai" });
   await page.getByLabel("Quantity").fill("3");

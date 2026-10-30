@@ -233,7 +233,7 @@ export const orderLineInput = z.strictObject({
 export const orderInput = z.strictObject({
   customer_id: z.string().trim().min(1, "Choose a customer").max(10),
   shipper_id: z.number().int().positive("Choose a shipper"),
-  required_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date"),
+  required_date: z.iso.date("Choose a valid date"),
   freight: z.number().min(0, "Freight cannot be negative").max(10_000, "Freight can be at most $10,000"),
   lines: z
     .array(orderLineInput)

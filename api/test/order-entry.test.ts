@@ -173,6 +173,38 @@ describe("order rules", () => {
     expect(stock(db, 1)).toBe(chai);
     expect(one(db, "SELECT count(*) AS n FROM orders WHERE entered_by_user IS NOT NULL").n).toBe(0);
   });
+
+  it("refuses nonexistent required dates on creation and editing without changing orders or stock", async () => {
+    const { db, app, alice } = await setup();
+    const placed = schemas.order.parse((await place(app, alice)).json);
+    const before = () => ({
+      orders: db.prepare("SELECT * FROM orders WHERE entered_by_user IS NOT NULL").all(),
+      lines: db.prepare("SELECT * FROM order_lines WHERE order_id = ?").all(placed.order_id),
+      stock: [stock(db, 1), stock(db, 2)],
+    });
+    const original = before();
+    for (const required_date of ["2027-02-30", "2027-02-29", "2027-13-01", "9999-99-99"]) {
+      const body = { ...valid, required_date };
+      for (const [path, method] of [
+        ["/api/orders", "POST"],
+        [`/api/orders/${placed.order_id}`, "PUT"],
+      ] as const) {
+        const response = await app.request(path, as(alice, { method, json: body }));
+        expect(response.status, `${method} ${required_date}`).toBe(422);
+        expect(await response.json()).toMatchObject({
+          issues: [{ path: "required_date", message: "Choose a valid date" }],
+        });
+        expect(before()).toEqual(original);
+      }
+    }
+  });
+
+  it("accepts a required date on a leap day", async () => {
+    const { app, alice } = await setup();
+    const { status, json } = await place(app, alice, { ...valid, required_date: "2028-02-29" });
+    expect(status).toBe(201);
+    expect(schemas.order.parse(json).required_date).toBe("2028-02-29T00:00:00");
+  });
 });
 
 describe("changing an order", () => {

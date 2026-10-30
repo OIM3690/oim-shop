@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 import { closeApi, resetApi, server } from "./api-server";
+
+// The first visit also loads lazy routes and the chart library.
+configure({ asyncUtilTimeout: 5_000 });
 
 // jsdom has no matchMedia; the sidebar asks it whether the screen is narrow.
 window.matchMedia ??= (query: string) =>

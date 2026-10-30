@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { server, signInAs, testDb, value } from "./api-server";
 import { recordRequests } from "./helpers";
 import { renderApp } from "./render";
+import { api } from "@/lib/api";
 
 const stock = (productId: number) =>
   Number(value("SELECT units_in_stock FROM products WHERE product_id = ?", productId));
@@ -85,6 +86,76 @@ describe("signing in", () => {
 });
 
 describe("entering an order", () => {
+  const ownOrder = async () => {
+    signInAs(3020, "Ana");
+    return api.placeOrder({
+      customer_id: "ALFKI",
+      shipper_id: 1,
+      required_date: "2027-01-01",
+      freight: 0,
+      lines: [{ product_id: 1, quantity: 1, discount: 0 }],
+    });
+  };
+
+  it("asks before shipping, lets the rep keep editing, and ships only after confirmation", async () => {
+    const order = await ownOrder();
+    const { user } = renderApp(`/orders/${order.order_id}`);
+    const shipments = recordRequests(`/orders/${order.order_id}/ship`);
+    const trigger = await screen.findByRole("button", { name: "Mark shipped" });
+    await user.click(trigger);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveAccessibleDescription(
+      "You will no longer be able to edit or cancel this order. This cannot be undone.",
+    );
+    expect(shipments).toHaveLength(0);
+    const keepEditing = within(dialog).getByRole("button", { name: "Keep editing" });
+    expect(keepEditing).toHaveFocus();
+    await user.click(keepEditing);
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(value("SELECT shipped_date FROM orders WHERE order_id = ?", order.order_id)).toBeNull();
+
+    await user.click(trigger);
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Mark shipped" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Edit" })).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(value("SELECT shipped_date FROM orders WHERE order_id = ?", order.order_id)).not.toBeNull(),
+    );
+    expect(shipments).toHaveLength(1);
+  });
+
+  it("holds the confirmation while shipping and allows retry after a failed shipment", async () => {
+    const order = await ownOrder();
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    server.use(
+      http.post("http://localhost:3000/api/orders/:id/ship", async () => {
+        await held;
+        return new Response(null, { status: 500 });
+      }),
+    );
+    const { user } = renderApp(`/orders/${order.order_id}`);
+    await user.click(await screen.findByRole("button", { name: "Mark shipped" }));
+    const dialog = await screen.findByRole("alertdialog");
+    const confirm = within(dialog).getByRole("button", { name: "Mark shipped" });
+    await user.click(confirm);
+    expect(confirm).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Keep editing" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel order", hidden: true })).toBeDisabled();
+    await user.keyboard("{Escape}");
+    expect(dialog).toBeInTheDocument();
+    release();
+    await screen.findByText("The API answered 500");
+    await waitFor(() => expect(confirm).toBeEnabled());
+    expect(value("SELECT shipped_date FROM orders WHERE order_id = ?", order.order_id)).toBeNull();
+    server.resetHandlers();
+    await user.click(confirm);
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(value("SELECT shipped_date FROM orders WHERE order_id = ?", order.order_id)).not.toBeNull();
+  });
+
   it("places an order, reserves the stock and opens the order", async () => {
     signInAs(3002, "Ana");
     const chai = stock(1);

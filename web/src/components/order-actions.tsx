@@ -26,11 +26,13 @@ export function OrderActions({ order }: { order: OrderSummary }) {
   const canChange = useCanChange(order);
   const onError = (error: Error) => toast.error(error.message);
   const [confirming, setConfirming] = useState(false);
+  const [confirmingShipment, setConfirmingShipment] = useState(false);
 
   const ship = useMutation({
     mutationFn: () => api.shipOrder(order.order_id),
     onSuccess: async () => {
       await refetchAfterWrite(queryClient);
+      setConfirmingShipment(false);
       toast.success(`Order ${order.order_id} marked shipped`);
     },
     onError,
@@ -57,10 +59,37 @@ export function OrderActions({ order }: { order: OrderSummary }) {
           Edit
         </Link>
       </Button>
-      <Button variant="outline" onClick={() => ship.mutate()} disabled={busy}>
-        <PackageCheck aria-hidden="true" />
-        Mark shipped
-      </Button>
+      <AlertDialog
+        open={confirmingShipment}
+        onOpenChange={(open) => !ship.isPending && setConfirmingShipment(open)}
+      >
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" disabled={busy}>
+            <PackageCheck aria-hidden="true" />
+            Mark shipped
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark order {order.order_id} as shipped?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will no longer be able to edit or cancel this order. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={ship.isPending}>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={ship.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                ship.mutate();
+              }}
+            >
+              Mark shipped
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={confirming} onOpenChange={(open) => !cancel.isPending && setConfirming(open)}>
         <AlertDialogTrigger asChild>
           <Button variant="destructive" disabled={busy}>

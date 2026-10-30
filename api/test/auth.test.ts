@@ -108,6 +108,17 @@ describe("sign-in", () => {
     }
   });
 
+  it("refuses unknown profile fields without changing the display name", async () => {
+    const { app, db } = make();
+    const { cookie } = await signIn(app, "alice");
+    const response = await app.request(
+      "/api/me",
+      as(cookie, { method: "PUT", json: { display_name: "Ana", extra: "ignored" } }),
+    );
+    expect(response.status).toBe(422);
+    expect(one(db, "SELECT count(*) AS n FROM employees WHERE user_id IS NOT NULL").n).toBe(0);
+  });
+
   it("signs the same GitHub user back in to the same account", async () => {
     const { app, db } = make();
     const first = await signIn(app, "alice");

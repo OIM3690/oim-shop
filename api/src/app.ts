@@ -1,5 +1,6 @@
 import { getConnInfo } from "@hono/node-server/conninfo";
 import { Hono, type Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import type { Database } from "./db.ts";
 import { sameOriginWrites } from "./guards.ts";
 import { notFound } from "./http.ts";
@@ -81,6 +82,13 @@ export function createApp({
       }
       await next();
     })
+    .use(
+      bodyLimit({
+        // Even an order with all 77 products fits within this limit.
+        maxSize: 16 * 1024,
+        onError: (c) => c.json({ detail: "The request body must be at most 16 KiB." }, 413),
+      }),
+    )
     .get("/health", (c) => {
       c.header("Cache-Control", "no-store");
       const orderCount = Number(db.prepare("SELECT count(*) AS n FROM orders").get()!.n);

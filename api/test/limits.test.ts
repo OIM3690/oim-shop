@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.ts";
 import { as, fakeGitHub, signIn } from "./auth-helpers.ts";
 import { freshDb, TEST_NOW } from "./helpers.ts";
+import { signInDirectly } from "../src/testing.ts";
 
 const server = setupServer(...fakeGitHub({ alice: 1001 }));
 beforeAll(() => server.listen({ onUnhandledFrame: "error" }));
@@ -37,6 +38,63 @@ describe("rate limits", () => {
     expect((await rename()).status).toBe(200);
     expect((await rename()).status).toBe(429);
     expect((await app.request("/api/me", as(cookie))).status).toBe(200);
+  });
+});
+
+describe("request body limits", () => {
+  const maxBytes = 16 * 1024;
+
+  function setup() {
+    const db = freshDb();
+    const cookie = signInDirectly(db, 7001, "Ana");
+    const app = createApp({ db, now: () => TEST_NOW });
+    const headers = { Cookie: cookie, Origin: "http://localhost:5173", "Content-Type": "application/json" };
+    return { db, app, headers };
+  }
+
+  it("accepts a body at the limit and refuses a larger declared body without writing", async () => {
+    const { db, app, headers } = setup();
+    const body = JSON.stringify({ display_name: "Ben" }).padEnd(maxBytes);
+    const accepted = await app.request("/api/me", {
+      method: "PUT",
+      headers: { ...headers, "Content-Length": String(maxBytes) },
+      body,
+    });
+    expect(accepted.status).toBe(200);
+    const refused = await app.request("/api/me", {
+      method: "PUT",
+      headers: { ...headers, "Content-Length": String(maxBytes + 1) },
+      body: JSON.stringify({ display_name: "Carol" }).padEnd(maxBytes + 1),
+    });
+    expect(refused.status).toBe(413);
+    expect(await refused.json()).toEqual({ detail: "The request body must be at most 16 KiB." });
+    expect(db.prepare("SELECT first_name FROM employees WHERE user_id IS NOT NULL").get()!.first_name).toBe(
+      "Ben",
+    );
+  });
+
+  it("counts streamed bytes without Content-Length before parsing JSON", async () => {
+    const { db, app, headers } = setup();
+    const bytes = new TextEncoder().encode(
+      JSON.stringify({ display_name: "Ana", extra: "é".repeat(maxBytes / 2) }),
+    );
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(bytes.slice(0, maxBytes));
+        controller.enqueue(bytes.slice(maxBytes));
+        controller.close();
+      },
+    });
+    const request = new Request("http://localhost:5173/api/me", {
+      method: "PUT",
+      headers,
+      body: stream,
+      duplex: "half",
+    });
+    expect((await app.request(request)).status).toBe(413);
+    expect(db.prepare("SELECT first_name FROM employees WHERE user_id IS NOT NULL").get()!.first_name).toBe(
+      "Ana",
+    );
   });
 });
 

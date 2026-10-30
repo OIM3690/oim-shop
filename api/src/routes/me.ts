@@ -23,7 +23,7 @@ export const me = new Hono<AppEnv>()
   .put(
     "/",
     requireUser,
-    zValidator("json", z.object({ display_name: displayName }), (result, c) => {
+    zValidator("json", z.strictObject({ display_name: displayName }), (result, c) => {
       if (!result.success) return c.json({ detail: result.error.issues.map((i) => i.message) }, 422);
     }),
     (c) => {

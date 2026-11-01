@@ -236,4 +236,4 @@ The `v2` and `v3` interface must look and behave like a professional product. Ea
 
 ## Open items
 
-- `v2.1` puts `v1` on GitHub Pages at `https://oim3690.github.io/oim-shop/v1/` and adds a Suppliers list and page and customers' contacts to `v2`, read from `oim-api`. A supplier's page lists its products once `oim-api`'s `/shop/products` takes a supplier filter, so the browser never filters a page of products itself.
+- None. `v2.1` put `v1` on GitHub Pages at `https://oim3690.github.io/oim-shop/v1/` and added a Suppliers list and page and customers' contacts to `v2`; `v2.2` lists a supplier's products, which `oim-api` filters by `supplier_id`.

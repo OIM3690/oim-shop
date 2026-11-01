@@ -1,7 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, configure } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
+import { TEST_NOW } from "api/testing";
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { closeApi, resetApi, server } from "./api-server";
+
+// The API under test answers at a fixed moment, TEST_NOW in Boston, so the
+// page's own clock is set to the same moment. Otherwise anything the page
+// counts from today, such as the dashboard's month menus, drifts away from
+// the API's figures as the calendar moves on. Only Date is faked; timers run.
+vi.useFakeTimers({ toFake: ["Date"], now: new Date(`${TEST_NOW}-04:00`) });
 
 // The first visit also loads lazy routes and the chart library.
 configure({ asyncUtilTimeout: 5_000 });

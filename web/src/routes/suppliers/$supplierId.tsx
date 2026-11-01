@@ -1,13 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
 import { Address, NameAndTitle } from "@/components/address";
+import { DataTable } from "@/components/data-table/data-table";
 import { BackLink, DetailCard, DetailLoading } from "@/components/detail";
 import { PageHeader } from "@/components/page-header";
-import { ErrorState } from "@/components/query-states";
+import { Pager } from "@/components/pager";
+import { productColumns } from "@/components/product-columns";
+import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
 import { Button } from "@/components/ui/button";
-import { supplierQuery } from "@/lib/queries";
+import { productsQuery, supplierQuery } from "@/lib/queries";
+import { cleanSearch } from "@/lib/search";
 
 export const Route = createFileRoute("/suppliers/$supplierId")({
+  validateSearch: z.object({ page: z.number().int().positive().optional().catch(undefined) }),
   component: SupplierPage,
 });
 
@@ -15,7 +21,12 @@ const notRecorded = <span className="text-muted-foreground">Not recorded</span>;
 
 function SupplierPage() {
   const { supplierId } = Route.useParams();
-  const supplier = useQuery(supplierQuery(Number(supplierId)));
+  const { page = 1 } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const id = Number(supplierId);
+  const supplier = useQuery(supplierQuery(id));
+  // oim-api filters the products by supplier; the browser never filters a page itself.
+  const products = useQuery({ ...productsQuery({ supplier_id: id, page }), enabled: supplier.isSuccess });
 
   if (supplier.isPending) return <DetailLoading label="Loading supplier" />;
   if (supplier.isError) {
@@ -64,6 +75,32 @@ function SupplierPage() {
           },
         ]}
       />
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Products</h2>
+        {products.isPending ? (
+          <LoadingRows label="Loading products" />
+        ) : products.isError ? (
+          <ErrorState
+            error={products.error}
+            what="This supplier's products"
+            onRetry={() => void products.refetch()}
+          />
+        ) : products.data.items.length === 0 ? (
+          <EmptyState title="No products." description="Northwind buys nothing from this supplier." />
+        ) : (
+          <>
+            <DataTable
+              columns={productColumns}
+              data={products.data.items}
+              stale={products.isPlaceholderData}
+            />
+            <Pager
+              pagination={products.data.pagination}
+              onPage={(next) => void navigate({ search: cleanSearch({ page: next > 1 ? next : undefined }) })}
+            />
+          </>
+        )}
+      </section>
     </>
   );
 }

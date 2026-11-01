@@ -1,17 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { DataTable } from "@/components/data-table/data-table";
-import type { DataTableFeatures } from "@/components/data-table/features";
 import { FilterBar, SearchField, SelectField } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
+import { productColumns } from "@/components/product-columns";
 import { Pager } from "@/components/pager";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-states";
-import { StockLabel } from "@/components/status-badges";
 import { Button } from "@/components/ui/button";
-import type { Product } from "@/lib/api";
-import { formatMoney } from "@/lib/format";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { cleanSearch } from "@/lib/search";
 
@@ -25,38 +21,6 @@ export const Route = createFileRoute("/products/")({
   validateSearch: searchSchema,
   component: ProductsPage,
 });
-
-const column = createColumnHelper<DataTableFeatures, Product>();
-
-const columns = column.columns([
-  column.accessor("name", {
-    header: "Product",
-    cell: ({ row }) => (
-      <Link
-        to="/products/$productId"
-        params={{ productId: String(row.original.product_id) }}
-        className="text-primary font-medium hover:underline"
-      >
-        {row.original.name}
-      </Link>
-    ),
-  }),
-  column.accessor("category", { header: "Category" }),
-  column.accessor("quantity_per_unit", { header: "Quantity per unit" }),
-  column.accessor("unit_price_dollars", {
-    header: () => <div className="text-right">Unit price</div>,
-    cell: ({ getValue }) => <div className="text-right tabular-nums">{formatMoney(getValue())}</div>,
-  }),
-  column.display({
-    id: "stock",
-    header: () => <div className="text-right">In stock</div>,
-    cell: ({ row }) => (
-      <div className="text-right">
-        <StockLabel product={row.original} />
-      </div>
-    ),
-  }),
-]);
 
 function ProductsPage() {
   const { name, category, page = 1 } = Route.useSearch();
@@ -102,7 +66,7 @@ function ProductsPage() {
         />
       ) : (
         <>
-          <DataTable columns={columns} data={products.data.items} stale={products.isPlaceholderData} />
+          <DataTable columns={productColumns} data={products.data.items} stale={products.isPlaceholderData} />
           <Pager
             pagination={products.data.pagination}
             onPage={(next) =>

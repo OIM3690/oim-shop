@@ -58,7 +58,18 @@ function ProductPage() {
               </>
             ),
           },
-          { label: "Supplier", value: p.supplier },
+          {
+            label: "Supplier",
+            value: (
+              <Link
+                to="/suppliers/$supplierId"
+                params={{ supplierId: String(p.supplier_id) }}
+                className="hover:underline"
+              >
+                {p.supplier}
+              </Link>
+            ),
+          },
           { label: "Quantity per unit", value: p.quantity_per_unit },
           { label: "Unit price", value: formatMoney(p.unit_price_dollars) },
           { label: "Units in stock", value: formatCount(p.units_in_stock) },

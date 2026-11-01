@@ -28,6 +28,7 @@ const product = z.object({
   name: z.string(),
   category: z.string(),
   supplier: z.string(),
+  supplier_id: z.number(),
   quantity_per_unit: z.string(),
   unit_price_dollars: z.number(),
   units_in_stock: z.number(),
@@ -144,6 +145,7 @@ async function get<T extends z.ZodType>(
 export interface ProductQuery {
   name?: string;
   category?: string;
+  supplier_id?: number;
   page: number;
 }
 

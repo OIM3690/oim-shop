@@ -44,8 +44,12 @@ export const handlers = [
     const categoryName = categories.find(
       (c) => String(c.category_id) === category || c.name.toLowerCase() === category?.toLowerCase(),
     )?.name;
+    const supplier = params.get("supplier_id");
     const matches = products.filter(
-      (p) => contains(p.name, params.get("name")) && (!category || p.category === categoryName),
+      (p) =>
+        contains(p.name, params.get("name")) &&
+        (!category || p.category === categoryName) &&
+        (!supplier || String(p.supplier_id) === supplier),
     );
     return HttpResponse.json(paginate(matches, params));
   }),

@@ -47,3 +47,23 @@ describe("a customer's page", () => {
     expect(screen.getByText("030-0076545")).toBeInTheDocument();
   });
 });
+
+describe("a supplier's products", () => {
+  it("are listed on the supplier's page, filtered by oim-api", async () => {
+    const requests = recordRequests("/products");
+    renderApp("/suppliers/1");
+    expect(await screen.findByRole("link", { name: "Chai" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Chang" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Aniseed Syrup" })).toBeInTheDocument();
+    expect(screen.getByText("1–3 of 3")).toBeInTheDocument();
+    expect(requests.at(-1)!.searchParams.get("supplier_id")).toBe("1");
+  });
+
+  it("link back to their supplier from a product's page", async () => {
+    renderApp("/products/2");
+    expect(await screen.findByRole("link", { name: "Exotic Liquids" })).toHaveAttribute(
+      "href",
+      expect.stringMatching(/\/suppliers\/1$/),
+    );
+  });
+});

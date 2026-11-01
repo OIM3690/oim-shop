@@ -53,7 +53,7 @@ A React interface with the product's list and detail pages. It still has no serv
 - **Customers**: list with search by company name and a country filter; detail with the customer's orders.
 - **Orders**: list with filters for customer, employee, country and date range; detail with the order's lines and totals.
 - **Employees**: list, the reporting hierarchy, and each employee's orders with their count.
-- **Suppliers** (from `v2.1`): list with search by company name; detail with the supplier's contact, address, phone, fax and home page. Customers' pages also show the contact's title, the address, phone and fax.
+- **Suppliers** (from `v2.1`): list with search by company name; detail with the supplier's contact, address, phone, fax and home page, and, from `v2.2`, its products, which `oim-api` filters by `supplier_id`. A product's page links to its supplier. Customers' pages also show the contact's title, the address, phone and fax.
 
 From `v2.1`, GitHub Pages also serves `v1` beside `v2`, at `/oim-shop/v1/`.
 
